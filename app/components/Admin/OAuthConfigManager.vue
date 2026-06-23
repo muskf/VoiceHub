@@ -320,7 +320,8 @@ const envData = ref({
   hasBaseConfig: false,
   hasGithubConfig: false,
   hasCasdoorConfig: false,
-  hasGoogleConfig: false
+  hasGoogleConfig: false,
+  hasQqConfig: false
 })
 
 const oauthProviders = computed(() => [
@@ -359,6 +360,18 @@ const oauthProviders = computed(() => [
     clientIdPlaceholder: '输入 Google Client ID（xxx.apps.googleusercontent.com）',
     clientSecretLabel: 'Google Client Secret',
     clientSecretPlaceholder: '输入 Google Client Secret',
+  },
+  {
+    id: 'qq',
+    title: 'QQ OAuth',
+    hasEnvConfig: envData.value.hasQqConfig,
+    enabledKey: 'qqOAuthEnabled',
+    clientIdKey: 'qqClientId',
+    clientSecretKey: 'qqClientSecret',
+    clientIdLabel: 'QQ APP ID',
+    clientIdPlaceholder: '输入 QQ 互联 APP ID',
+    clientSecretLabel: 'QQ APP KEY',
+    clientSecretPlaceholder: '输入 QQ 互联 APP KEY',
   }
 ])
 

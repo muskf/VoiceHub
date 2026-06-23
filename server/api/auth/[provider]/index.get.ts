@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
   }
 
   if (!isSupportedOAuthProvider(provider)) {
-    throw createError({ statusCode: 400, message: '当前仅支持 GitHub / Casdoor / Google / 第三方 OAuth2' })
+    throw createError({ statusCode: 400, message: '当前仅支持 GitHub / Casdoor / Google / QQ / 第三方 OAuth2' })
   }
 
   const enabled = await isOAuthProviderEnabled(provider)

@@ -1,9 +1,9 @@
 import { db } from '~/drizzle/db'
 import { systemSettings } from '~/drizzle/schema'
 
-export type OAuthProvider = 'github' | 'casdoor' | 'google' | 'oauth2'
+export type OAuthProvider = 'github' | 'casdoor' | 'google' | 'qq' | 'oauth2'
 
-export const SUPPORTED_OAUTH_PROVIDERS: OAuthProvider[] = ['github', 'casdoor', 'google', 'oauth2']
+export const SUPPORTED_OAUTH_PROVIDERS: OAuthProvider[] = ['github', 'casdoor', 'google', 'qq', 'oauth2']
 
 export const isSupportedOAuthProvider = (provider: string): provider is OAuthProvider => {
   return SUPPORTED_OAUTH_PROVIDERS.includes(provider as OAuthProvider)
@@ -45,6 +45,7 @@ export const isOAuthProviderEnabled = async (provider: OAuthProvider): Promise<b
   if (provider === 'github') return !!settings.githubOAuthEnabled
   if (provider === 'casdoor') return !!settings.casdoorOAuthEnabled
   if (provider === 'google') return !!settings.googleOAuthEnabled
+  if (provider === 'qq') return !!settings.qqOAuthEnabled
   if (provider === 'oauth2') return !!settings.customOAuthEnabled
 
   return false
@@ -67,6 +68,20 @@ export const getProviderRuntimeConfig = async (provider: OAuthProvider): Promise
       clientId: settings.casdoorClientId || undefined,
       clientSecret: settings.casdoorClientSecret || undefined,
       endpoint: settings.casdoorServerUrl || undefined
+    }
+  }
+
+  if (provider === 'google') {
+    return {
+      clientId: settings.googleClientId || undefined,
+      clientSecret: settings.googleClientSecret || undefined
+    }
+  }
+
+  if (provider === 'qq') {
+    return {
+      clientId: settings.qqClientId || undefined,
+      clientSecret: settings.qqClientSecret || undefined
     }
   }
 
@@ -95,7 +110,7 @@ export const getProviderRuntimeConfig = async (provider: OAuthProvider): Promise
 
 export const getOAuthProviderDisplayName = async (provider: OAuthProvider): Promise<string> => {
   if (provider !== 'oauth2') {
-    return provider === 'github' ? 'GitHub' : provider === 'casdoor' ? 'Casdoor' : 'Google'
+    return provider === 'github' ? 'GitHub' : provider === 'casdoor' ? 'Casdoor' : provider === 'qq' ? 'QQ' : 'Google'
   }
 
   const settings = await getSettings()
