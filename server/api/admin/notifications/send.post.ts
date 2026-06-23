@@ -170,7 +170,7 @@ export default defineEventHandler(async (event) => {
 
     throw createError({
       statusCode: error.statusCode || 500,
-      message: error.message || '发送通知失败'
+      message: '发送通知失败'
     })
   }
 })

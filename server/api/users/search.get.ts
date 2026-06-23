@@ -3,7 +3,16 @@ import { db } from '~/drizzle/db'
 import { users, systemSettings } from '~/drizzle/schema'
 import { and, ilike, or, ne, eq } from 'drizzle-orm'
 
+import { checkRateLimit } from '~~/server/utils/rateLimiter'
+import { getClientIP } from '~~/server/utils/ip-utils'
+
 export default defineEventHandler(async (event) => {
+  const clientIP = getClientIP(event)
+  const searchLimitKey = `user_search_ip:${clientIP}`
+  const searchLimitResult = checkRateLimit(searchLimitKey, 30, 60 * 1000)
+  if (!searchLimitResult.isAllowed) {
+    throw createError({ statusCode: 429, message: '搜索请求过于频繁，请稍后再试' })
+  }
   // 验证用户登录
   const user = event.context.user
   if (!user) {

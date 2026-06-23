@@ -41,12 +41,13 @@ const ssrInlineLyricPackages = [
   '@applemusic-like-lyrics/lyric'
 ]
 
-const backendSentryDsnDefault =
-  'https://2fca0c8a939c8909e02c082ec847e8e8@o4508946125619200.ingest.de.sentry.io/4511244961448016'
-const frontendSentryDsnDefault =
-  'https://3c4fe5353816bcdce36e7cc28703c8fa@o4508946125619200.ingest.de.sentry.io/4511244934774864'
+const backendSentryDsnDefault = process.env.SENTRY_DSN || ''
+const frontendSentryDsnDefault = process.env.NUXT_PUBLIC_SENTRY_DSN || ''
 const sentryRuntimeEnabled = process.env.NODE_ENV === 'production'
 const jwtSecret = process.env.JWT_SECRET || ''
+if (process.env.NODE_ENV === 'production' && (!jwtSecret || jwtSecret.length < 32)) {
+  throw new Error('JWT_SECRET 环境变量未设置或长度不足32位，请配置一个强随机字符串后重新启动')
+}
 
 // 构造绝对路径 Logo URL 用于 SEO 标签，如果没有 host，则回退为相对路径
 const host = process.env.NUXT_PUBLIC_HOST

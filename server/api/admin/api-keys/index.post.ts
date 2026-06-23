@@ -140,13 +140,13 @@ export default defineEventHandler(async (event) => {
     if (error.name === 'ZodError') {
       throw createError({
         statusCode: 400,
-        message: `请求参数验证失败：${error.errors.map((e: any) => e.message).join(', ')}`
+        message: '请求参数验证失败'
       })
     }
 
     throw createError({
       statusCode: 500,
-      message: `创建 API Key 失败：${error.message}`
+      message: '创建 API Key 失败'
     })
   }
 })

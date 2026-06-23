@@ -5,6 +5,7 @@ import { eq } from 'drizzle-orm'
 import { recordLoginFailure, recordLoginSuccess } from '../../services/securityService'
 import { updateUserPassword } from '../../services/userService'
 import { getClientIP } from '~~/server/utils/ip-utils'
+import { checkRateLimit } from '~~/server/utils/rateLimiter'
 
 export default defineEventHandler(async (event) => {
   // 验证用户身份
@@ -14,6 +15,13 @@ export default defineEventHandler(async (event) => {
       statusCode: 401,
       message: '未授权'
     })
+  }
+
+  const clientIP = getClientIP(event)
+  const cpRateLimitKey = `change_password:${user.id}`
+  const cpLimitResult = checkRateLimit(cpRateLimitKey, 3, 60 * 60 * 1000)
+  if (!cpLimitResult.isAllowed) {
+    throw createError({ statusCode: 429, message: '密码修改过于频繁，请稍后再试' })
   }
 
   const body = await readBody(event)
@@ -91,7 +99,7 @@ export default defineEventHandler(async (event) => {
     // 创建错误响应
     throw createError({
       statusCode: 500,
-      message: '修改密码失败: ' + (error.message || '未知错误')
+      message: '修改密码失败，请稍后重试'
     })
   }
 })

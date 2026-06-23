@@ -61,7 +61,7 @@ export default defineEventHandler(async (event) => {
   } catch (error: any) {
     throw createError({
       statusCode: error.statusCode || 500,
-      message: error.message || '初始密码设置失败'
+      message: '初始密码设置失败'
     })
   }
 })

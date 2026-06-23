@@ -193,7 +193,7 @@ export default defineEventHandler(async (event) => {
   } catch (error: any) {
     throw createError({
       statusCode: 500,
-      message: `获取 API Key 列表失败：${error.message}`
+      message: '获取 API Key 列表失败'
     })
   }
 })

@@ -42,6 +42,36 @@ export default defineEventHandler(async (event) => {
       })
     }
 
+    // 输入长度校验
+    if (typeof title !== 'string' || title.length > 500) {
+      throw createError({ statusCode: 400, message: '歌曲名称不能超过500个字符' })
+    }
+    if (typeof artist !== 'string' || artist.length > 500) {
+      throw createError({ statusCode: 400, message: '艺术家名称不能超过500个字符' })
+    }
+
+    // URL 格式校验
+    if (playUrl && typeof playUrl === 'string' && playUrl.trim()) {
+      try {
+        const url = new URL(playUrl)
+        if (!['http:', 'https:'].includes(url.protocol)) {
+          throw createError({ statusCode: 400, message: '播放链接必须是 http 或 https 协议' })
+        }
+      } catch {
+        throw createError({ statusCode: 400, message: '播放链接格式无效' })
+      }
+    }
+    if (cover && typeof cover === 'string' && cover.trim()) {
+      try {
+        const url = new URL(cover)
+        if (!['http:', 'https:'].includes(url.protocol)) {
+          throw createError({ statusCode: 400, message: '封面链接必须是 http 或 https 协议' })
+        }
+      } catch {
+        throw createError({ statusCode: 400, message: '封面链接格式无效' })
+      }
+    }
+
     // 查找投稿人用户
     let requesterId = null
     if (requester) {
@@ -147,7 +177,7 @@ export default defineEventHandler(async (event) => {
 
     throw createError({
       statusCode: 500,
-      message: error.message || 'Internal server error'
+      message: 'Internal server error'
     })
   }
 })

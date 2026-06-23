@@ -26,11 +26,17 @@ export default defineEventHandler(async (event) => {
   // 二次验证路径
   const resolved = path.resolve(filepath)
   const allowedDir = path.resolve(path.join(process.cwd(), 'public', 'uploads', 'logos'))
-  if (!resolved.startsWith(allowedDir)) {
+  if (!resolved.startsWith(allowedDir + path.sep) && resolved !== allowedDir) {
     throw createError({ statusCode: 400, message: '非法路径' })
   }
 
   try {
+    // 检查是否为符号链接（防止 symlink 攻击）
+    const stat = await fs.lstat(filepath)
+    if (stat.isSymbolicLink()) {
+      throw createError({ statusCode: 400, message: '不允许删除符号链接' })
+    }
+
     await fs.unlink(filepath)
     console.log(`[Logo] 管理员 ${user.username} 删除了 Logo: ${filename}`)
     return { success: true, message: 'Logo 已删除' }

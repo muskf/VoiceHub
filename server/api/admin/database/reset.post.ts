@@ -105,9 +105,9 @@ async function resetAutoIncrementSequences() {
 
 export default defineEventHandler(async (event) => {
   try {
-    // 验证管理员权限
+    // 验证超级管理员权限（仅 SUPER_ADMIN 可执行数据库重置）
     const user = event.context.user
-    if (!user || !['ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
+    if (!user || user.role !== 'SUPER_ADMIN') {
       throw createError({
         statusCode: 403,
         message: '权限不足'
@@ -273,7 +273,7 @@ export default defineEventHandler(async (event) => {
       console.error('重置数据库失败:', error)
       throw createError({
         statusCode: 500,
-        message: `重置数据库失败：${error.message}`
+        message: '重置数据库失败'
       })
     }
 
@@ -281,7 +281,7 @@ export default defineEventHandler(async (event) => {
   } catch (error) {
     throw createError({
       statusCode: error.statusCode || 500,
-      message: error.message || '服务器内部错误'
+      message: '服务器内部错误'
     })
   }
 })

@@ -320,7 +320,7 @@ export default defineEventHandler(async (event) => {
     console.error('创建排期失败:', error)
     throw createError({
       statusCode: 500,
-      message: error.message || '创建排期失败'
+      message: '创建排期失败'
     })
   }
 })

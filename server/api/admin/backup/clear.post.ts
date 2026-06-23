@@ -172,7 +172,7 @@ export default defineEventHandler(async (event) => {
     console.error('清空数据失败:', error)
     throw createError({
       statusCode: 500,
-      message: '清空数据失败：' + error.message
+      message: '清空数据失败'
     })
   }
 })

@@ -65,7 +65,7 @@ export default defineEventHandler(async (event) => {
     console.error('删除备份文件失败:', error)
     throw createError({
       statusCode: error.statusCode || 500,
-      message: error.message || '删除备份文件失败'
+      message: '删除备份文件失败'
     })
   }
 })

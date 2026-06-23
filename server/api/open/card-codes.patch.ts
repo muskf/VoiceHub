@@ -120,7 +120,7 @@ export default defineEventHandler(async (event) => {
     if (err.name === 'ZodError') {
       throw createError({
         statusCode: 400,
-        message: `请求参数验证失败：${(err.issues || err.errors).map((issue: any) => issue.message).join(', ')}`
+        message: '请求参数验证失败'
       })
     }
     console.error('开放API更新点歌券失败', err)

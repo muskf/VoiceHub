@@ -117,7 +117,7 @@ export default defineEventHandler(async (event) => {
 
     throw createError({
       statusCode: 500,
-      message: '获取用户状态变更日志失败：' + error.message
+      message: '获取用户状态变更日志失败'
     })
   }
 })

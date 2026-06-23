@@ -51,7 +51,7 @@ export default defineEventHandler(async (event) => {
 
     throw createError({
       statusCode: 500,
-      message: error.message || '更新排期顺序失败'
+      message: '更新排期顺序失败'
     })
   }
 })

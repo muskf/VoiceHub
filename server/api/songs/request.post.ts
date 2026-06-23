@@ -34,6 +34,50 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  // 输入长度校验
+  const MAX_TITLE_LENGTH = 500
+  const MAX_ARTIST_LENGTH = 500
+  const MAX_URL_LENGTH = 2048
+  const MAX_NOTE_LENGTH = 2000
+
+  if (typeof body.title !== 'string' || body.title.length > MAX_TITLE_LENGTH) {
+    throw createError({ statusCode: 400, message: `歌曲名称不能超过${MAX_TITLE_LENGTH}个字符` })
+  }
+  if (typeof body.artist !== 'string' || body.artist.length > MAX_ARTIST_LENGTH) {
+    throw createError({ statusCode: 400, message: `艺术家名称不能超过${MAX_ARTIST_LENGTH}个字符` })
+  }
+  if (body.playUrl && (typeof body.playUrl !== 'string' || body.playUrl.length > MAX_URL_LENGTH)) {
+    throw createError({ statusCode: 400, message: `播放链接不能超过${MAX_URL_LENGTH}个字符` })
+  }
+  if (body.cover && (typeof body.cover !== 'string' || body.cover.length > MAX_URL_LENGTH)) {
+    throw createError({ statusCode: 400, message: `封面链接不能超过${MAX_URL_LENGTH}个字符` })
+  }
+  if (body.submissionNote && (typeof body.submissionNote !== 'string' || body.submissionNote.length > MAX_NOTE_LENGTH)) {
+    throw createError({ statusCode: 400, message: `投稿备注不能超过${MAX_NOTE_LENGTH}个字符` })
+  }
+
+  // URL 格式校验（防止 javascript: 等伪协议注入）
+  if (body.playUrl && typeof body.playUrl === 'string' && body.playUrl.trim()) {
+    try {
+      const url = new URL(body.playUrl)
+      if (!['http:', 'https:'].includes(url.protocol)) {
+        throw createError({ statusCode: 400, message: '播放链接必须是 http 或 https 协议' })
+      }
+    } catch {
+      throw createError({ statusCode: 400, message: '播放链接格式无效' })
+    }
+  }
+  if (body.cover && typeof body.cover === 'string' && body.cover.trim()) {
+    try {
+      const url = new URL(body.cover)
+      if (!['http:', 'https:'].includes(url.protocol)) {
+        throw createError({ statusCode: 400, message: '封面链接必须是 http 或 https 协议' })
+      }
+    } catch {
+      throw createError({ statusCode: 400, message: '封面链接格式无效' })
+    }
+  }
+
   try {
     // 标准化字符串用于精确匹配
     const normalizeForMatch = (str: string): string => {

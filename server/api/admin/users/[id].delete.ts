@@ -85,7 +85,7 @@ export default defineEventHandler(async (event) => {
 
     throw createError({
       statusCode: 500,
-      message: '删除用户失败：' + error.message
+      message: '删除用户失败'
     })
   }
 })

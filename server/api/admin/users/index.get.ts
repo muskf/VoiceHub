@@ -159,7 +159,7 @@ export default defineEventHandler(async (event) => {
     console.error('获取用户列表失败:', error)
     throw createError({
       statusCode: 500,
-      message: '获取用户列表失败: ' + error.message
+      message: '获取用户列表失败'
     })
   }
 })

@@ -178,7 +178,6 @@ export default defineEventHandler(async (event) => {
 
     setHeader(event, 'Content-Type', contentType)
     setHeader(event, 'Cache-Control', 'public, max-age=3600')
-    setHeader(event, 'Access-Control-Allow-Origin', '*')
 
     return new Uint8Array(buffer)
   } catch (error) {

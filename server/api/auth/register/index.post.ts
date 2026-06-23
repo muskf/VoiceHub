@@ -49,9 +49,9 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: validationError })
   }
 
-  // 验证邮箱验证码
-  const { getStore, delStore } = await import('~~/server/utils/captchaStore')
-  const storedData = await getStore(`register_code:${email}`)
+  // 验证邮箱验证码（原子操作：获取并删除，防止竞态条件）
+  const { getAndDelStore, setStore } = await import('~~/server/utils/captchaStore')
+  const storedData = await getAndDelStore(`register_code:${email}`)
   if (!storedData) {
     throw createError({ statusCode: 400, message: '验证码已过期或不存在，请重新获取' })
   }
@@ -64,21 +64,35 @@ export default defineEventHandler(async (event) => {
   }
 
   if (Date.now() > storedCode.expiresAt) {
-    await delStore(`register_code:${email}`)
     throw createError({ statusCode: 400, message: '验证码已过期，请重新获取' })
   }
 
-  if (storedCode.code !== code.toString().trim()) {
+  // 时序安全的验证码比较
+  const { timingSafeEqual } = await import('node:crypto')
+  const storedBuf = Buffer.from(storedCode.code, 'utf8')
+  const inputBuf = Buffer.from(code.toString().trim(), 'utf8')
+  if (storedBuf.length !== inputBuf.length || !timingSafeEqual(storedBuf, inputBuf)) {
+    // 验证失败时恢复验证码（允许重试）
+    const remainingMs = storedCode.expiresAt - Date.now()
+    if (remainingMs > 0) {
+      await setStore(`register_code:${email}`, storedData, Math.ceil(remainingMs / 1000))
+    }
     throw createError({ statusCode: 400, message: '验证码错误' })
   }
-
-  // 验证通过，删除验证码
-  await delStore(`register_code:${email}`)
 
   // 检查邮箱是否已被使用
   const existingEmail = await db.select({ id: users.id }).from(users).where(eq(users.email, email)).limit(1)
   if (existingEmail.length > 0) {
     throw createError({ statusCode: 409, message: '该邮箱已被注册' })
+  }
+
+  // 检查保留用户名
+  const RESERVED_USERNAMES = new Set([
+    'admin', 'administrator', 'root', 'system', 'moderator', 'superadmin',
+    'super_admin', 'song_admin', 'null', 'undefined', 'api', 'www', 'mail'
+  ])
+  if (RESERVED_USERNAMES.has(username.toLowerCase())) {
+    throw createError({ statusCode: 400, message: '该用户名为系统保留，请选择其他用户名' })
   }
 
   // 检查用户名是否已存在
@@ -89,7 +103,7 @@ export default defineEventHandler(async (event) => {
 
   try {
     // 加密密码
-    const hashedPassword = await bcrypt.hash(password, 10)
+    const hashedPassword = await bcrypt.hash(password, 12)
     const now = getBeijingTime()
 
     // 创建用户
@@ -140,7 +154,7 @@ export default defineEventHandler(async (event) => {
     console.error('[Register] 注册失败:', e)
     throw createError({
       statusCode: e.statusCode || 500,
-      message: e.message || '注册失败，请稍后重试'
+      message: e.statusCode ? e.message : '注册失败，请稍后重试'
     })
   }
 })

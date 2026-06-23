@@ -146,7 +146,7 @@ export default defineEventHandler(async (event) => {
     // 其他错误
     throw createError({
       statusCode: 500,
-      message: '驳回歌曲失败: ' + error.message
+      message: '驳回歌曲失败'
     })
   }
 })

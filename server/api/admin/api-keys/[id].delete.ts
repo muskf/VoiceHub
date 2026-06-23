@@ -73,7 +73,7 @@ export default defineEventHandler(async (event) => {
 
     throw createError({
       statusCode: 500,
-      message: `删除 API Key 失败：${error.message}`
+      message: '删除 API Key 失败'
     })
   }
 })

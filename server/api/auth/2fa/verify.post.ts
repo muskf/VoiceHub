@@ -3,6 +3,7 @@ import { twoFactorCodes } from '~~/server/utils/twoFactorStore'
 import { JWTEnhanced } from '~~/server/utils/jwt-enhanced'
 import { getClientIP } from '~~/server/utils/ip-utils'
 import { getBeijingTime } from '~/utils/timeUtils'
+import { timingSafeEqual } from 'node:crypto'
 import { verifyBindingToken } from '~~/server/utils/oauth-token'
 import { isSecureRequest } from '~~/server/utils/request-utils'
 import { delStore, getStore, incrStore } from '~~/server/utils/captchaStore'
@@ -101,7 +102,10 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 400, message: '验证尝试次数过多，请重新获取' })
     }
 
-    if (stored.code === code) {
+    // 时序安全的验证码比较
+    const storedCodeBuf = Buffer.from(stored.code, 'utf8')
+    const inputCodeBuf = Buffer.from(code, 'utf8')
+    if (storedCodeBuf.length === inputCodeBuf.length && timingSafeEqual(storedCodeBuf, inputCodeBuf)) {
       verified = true
       twoFactorCodes.delete(targetUserId) // 验证成功后删除
     } else {

@@ -32,7 +32,7 @@ export default defineEventHandler(async (event) => {
     console.error('[Reconnect API] 重连过程中出错:', error)
     return {
       success: false,
-      message: '重连过程中出错: ' + error.message,
+      message: '重连过程中出错',
       error: error.message,
       timestamp: new Date().toISOString()
     }

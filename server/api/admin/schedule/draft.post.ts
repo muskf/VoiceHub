@@ -206,7 +206,7 @@ export default defineEventHandler(async (event) => {
     // 对于未知错误，返回具体的错误信息
     throw createError({
       statusCode: 500,
-      message: error.message || '服务器内部错误，请稍后重试'
+      message: '服务器内部错误，请稍后重试'
     })
   }
 })

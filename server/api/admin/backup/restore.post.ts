@@ -2452,7 +2452,7 @@ export default defineEventHandler(async (event) => {
     console.error('恢复数据库备份失败:', error)
     throw createError({
       statusCode: error.statusCode || 500,
-      message: error.message || '恢复数据库备份失败'
+      message: '恢复数据库备份失败'
     })
   }
 })

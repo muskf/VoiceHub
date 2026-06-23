@@ -10,6 +10,7 @@ import {
 } from '~~/server/services/securityService'
 import { cacheService } from '~~/server/services/cacheService'
 import { getClientIP } from '~~/server/utils/ip-utils'
+import { checkRateLimit } from '~~/server/utils/rateLimiter'
 
 export default defineEventHandler(async (event) => {
   // 检查用户认证
@@ -22,8 +23,16 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const body = await readBody(event)
   const clientIP = getClientIP(event)
+
+  // 用户级别限流：每分钟最多 10 次投票
+  const voteRateLimitKey = `vote_user:${user.id}`
+  const voteLimitResult = checkRateLimit(voteRateLimitKey, 10, 60 * 1000)
+  if (!voteLimitResult.isAllowed) {
+    throw createError({ statusCode: 429, message: '投票操作过于频繁，请稍后再试' })
+  }
+
+  const body = await readBody(event)
 
   if (!body.songId) {
     throw createError({

@@ -150,7 +150,7 @@ export default defineEventHandler(async (event) => {
     console.error('OAuth register error:', e)
     throw createError({
       statusCode: 500,
-      message: e.message || '注册失败，请稍后重试'
+      message: '注册失败，请稍后重试'
     })
   }
 })

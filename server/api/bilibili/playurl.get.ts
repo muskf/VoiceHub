@@ -105,7 +105,7 @@ export default defineEventHandler(async (event) => {
     console.error('Bilibili playurl error:', error)
     throw createError({
       statusCode: 500,
-      message: error.message || '获取 Bilibili 音频链接失败'
+      message: '获取 Bilibili 音频链接失败'
     })
   }
 })

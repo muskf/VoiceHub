@@ -22,6 +22,20 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  if (songIds.length > 100) {
+    throw createError({
+      statusCode: 400,
+      message: '单次导入不能超过100首歌曲'
+    })
+  }
+
+  // 校验每个 songId 必须是正整数
+  for (const id of songIds) {
+    if (!Number.isInteger(id) || id <= 0) {
+      throw createError({ statusCode: 400, message: '歌曲 ID 格式无效' })
+    }
+  }
+
   // 获取当前活跃学期
   const activeSemester = await db
     .select()

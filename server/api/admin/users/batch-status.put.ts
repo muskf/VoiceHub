@@ -182,7 +182,7 @@ export default defineEventHandler(async (event) => {
 
     throw createError({
       statusCode: 500,
-      message: '批量更新用户状态失败: ' + error.message
+      message: '批量更新用户状态失败'
     })
   }
 })

@@ -4,6 +4,7 @@ import { eq } from 'drizzle-orm'
 import { SmtpService } from '~~/server/services/smtpService'
 import { getClientIP } from '~~/server/utils/ip-utils'
 import { checkRateLimit } from '~~/server/utils/rateLimiter'
+import { randomInt } from 'node:crypto'
 
 export default defineEventHandler(async (event) => {
   // 检查是否允许邮箱注册
@@ -39,20 +40,21 @@ export default defineEventHandler(async (event) => {
   const emailRateLimitKey = `register_send_code_email:${emailRaw}`
   const emailLimitResult = checkRateLimit(emailRateLimitKey, 3, 60 * 60 * 1000)
   if (!emailLimitResult.isAllowed) {
-    throw createError({ statusCode: 429, message: '该邮箱发送验证码过于频繁，请稍后再试' })
+    throw createError({ statusCode: 429, message: '发送验证码过于频繁，请稍后再试' })
   }
 
-  // 检查邮箱是否已被使用
+  // 检查邮箱是否已被使用（但不对外暴露结果，防止邮箱枚举）
   const existingUser = await db.select({ id: users.id }).from(users).where(eq(users.email, emailRaw)).limit(1)
   if (existingUser.length > 0) {
-    throw createError({ statusCode: 409, message: '该邮箱已被注册' })
+    // 静默返回成功，不发送验证码，防止邮箱枚举攻击
+    return { success: true, message: '验证码已发送，请查收邮箱' }
   }
 
-  // 生成 6 位验证码
-  const code = Math.floor(100000 + Math.random() * 900000).toString()
+  // 使用 crypto.randomInt 生成密码学安全的 6 位验证码
+  const code = randomInt(100000, 999999).toString()
   const expiresAt = Date.now() + 5 * 60 * 1000
 
-  // 存入内存存储（复用 captchaStore 模式）
+  // 存入存储（captchaStore，支持 Redis/内存）
   const { setStore } = await import('~~/server/utils/captchaStore')
   await setStore(`register_code:${emailRaw}`, JSON.stringify({ code, expiresAt }), 5 * 60)
 
@@ -72,12 +74,12 @@ export default defineEventHandler(async (event) => {
       clientIP
     )
     if (!sent) {
-      throw createError({ statusCode: 500, message: '验证码发送失败，请稍后重试' })
+      console.error('[Register] 验证码邮件发送失败')
     }
   } catch (e: any) {
     console.error('[Register] 发送验证码邮件失败:', e.message)
-    throw createError({ statusCode: 500, message: '验证码发送失败，请检查邮箱地址或稍后重试' })
   }
 
+  // 无论发送是否成功，都返回相同响应（防止信息泄露）
   return { success: true, message: '验证码已发送，请查收邮箱' }
 })

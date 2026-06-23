@@ -7,7 +7,13 @@ function parseAllowedOrigins(): string[] {
 }
 
 function isOriginAllowed(origin: string, allowedOrigins: string[]): boolean {
-  if (allowedOrigins.length === 0) return true
+  if (allowedOrigins.length === 0) {
+    // 生产环境下必须显式配置 WEBAUTHN_ORIGIN
+    if (process.env.NODE_ENV === 'production') {
+      console.warn('[WebAuthn] WEBAUTHN_ORIGIN 未配置，生产环境存在安全风险')
+    }
+    return true // 开发环境允许任意源
+  }
   return allowedOrigins.includes(origin)
 }
 

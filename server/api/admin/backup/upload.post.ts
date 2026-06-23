@@ -70,13 +70,26 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    // 生成新的文件名
+    // 生成新的文件名（清洗原始文件名防止路径注入）
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
-    const originalName = uploadedFile.originalFilename || 'backup.json'
+    const originalName = (uploadedFile.originalFilename || 'backup.json')
+      .replace(/[^a-zA-Z0-9._-]/g, '_') // 仅保留安全字符
+      .substring(0, 100) // 限制长度
     const fileExtension = path.extname(originalName)
     const baseName = path.basename(originalName, fileExtension)
     const newFilename = `uploaded-${baseName}-${timestamp}${fileExtension}`
     const newFilepath = path.join(backupDir, newFilename)
+
+    // 安全路径验证
+    const resolvedNewPath = path.resolve(newFilepath)
+    const resolvedBackupDir = path.resolve(backupDir)
+    if (!resolvedNewPath.startsWith(resolvedBackupDir + path.sep)) {
+      await fs.unlink(uploadedFile.filepath).catch(() => {})
+      throw createError({
+        statusCode: 400,
+        message: '无效的文件路径'
+      })
+    }
 
     // 移动文件到新位置
     await fs.rename(uploadedFile.filepath, newFilepath)
@@ -127,7 +140,7 @@ export default defineEventHandler(async (event) => {
     console.error('上传备份文件失败:', error)
     throw createError({
       statusCode: error.statusCode || 500,
-      message: error.message || '上传备份文件失败'
+      message: '上传备份文件失败'
     })
   }
 })

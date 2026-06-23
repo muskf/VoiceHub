@@ -7,42 +7,44 @@ import { getHeaders } from 'h3'
  * @returns 客户端IP地址
  */
 export function getClientIP(event: H3Event): string {
-  // 尝试从各种可能的头部获取真实IP
-  const headers = getHeaders(event)
+  // 获取直接连接的IP
+  const remoteAddress = event.node.req.socket?.remoteAddress?.replace(/^::ffff:/, '') || ''
 
-  // 按优先级检查各种IP头部
-  const ipHeaders = [
-    'x-forwarded-for',
-    'x-real-ip',
-    'x-client-ip',
-    'cf-connecting-ip', // Cloudflare
-    'x-forwarded',
-    'forwarded-for',
-    'forwarded'
-  ]
+  // 判断直接连接是否来自可信代理（本地回环或配置的代理IP）
+  const trustedProxies = ['127.0.0.1', '::1', '::ffff:127.0.0.1']
+  const envProxies = process.env.TRUSTED_PROXY_IPS?.split(',').map(ip => ip.trim()) || []
+  const allTrusted = [...trustedProxies, ...envProxies]
+  const isTrustedProxy = allTrusted.some(p => remoteAddress === p || remoteAddress === p.replace(/^::ffff:/, ''))
 
-  for (const header of ipHeaders) {
-    const value = headers[header]
-    if (value) {
-      // x-forwarded-for 可能包含多个IP，取第一个
-      const ip = Array.isArray(value) ? value[0] : value
-      const firstIP = ip.split(',')[0].trim()
-      if (firstIP && isValidIP(firstIP)) {
-        return firstIP
+  // 仅当直接连接来自可信代理时，才信任代理头部
+  if (isTrustedProxy) {
+    const headers = getHeaders(event)
+    const ipHeaders = [
+      'cf-connecting-ip', // Cloudflare（优先级最高）
+      'x-real-ip',
+      'x-client-ip',
+      'x-forwarded-for',
+      'x-forwarded',
+      'forwarded-for',
+      'forwarded'
+    ]
+
+    for (const header of ipHeaders) {
+      const value = headers[header]
+      if (value) {
+        const ip = Array.isArray(value) ? value[0] : value
+        // x-forwarded-for 可能包含多个IP，取第一个（最左侧，原始客户端）
+        const firstIP = ip.split(',')[0].trim()
+        if (firstIP && isValidIP(firstIP)) {
+          return firstIP
+        }
       }
     }
   }
 
-  // 如果没有找到，直接从连接信息获取
-
-  // 从连接信息获取IP（备用方法）
-  const remoteAddress = event.node.req.socket?.remoteAddress
-  if (remoteAddress) {
-    // 移除IPv6映射的IPv4前缀
-    const cleanIP = remoteAddress.replace(/^::ffff:/, '')
-    if (isValidIP(cleanIP)) {
-      return cleanIP
-    }
+  // 直接连接IP或无代理头部时使用直接连接IP
+  if (remoteAddress && isValidIP(remoteAddress)) {
+    return remoteAddress
   }
 
   return 'unknown'

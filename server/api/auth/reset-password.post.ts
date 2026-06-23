@@ -63,6 +63,6 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 400, message: '重置链接已过期，请重新申请' })
     }
     if (error.statusCode) throw error
-    throw createError({ statusCode: 400, message: '重置密码失败：' + (error.message || '无效链接') })
+    throw createError({ statusCode: 400, message: '重置密码失败，请重新获取链接' })
   }
 })

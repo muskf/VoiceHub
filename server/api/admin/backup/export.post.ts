@@ -1,5 +1,6 @@
 import { createError, defineEventHandler, readBody } from 'h3'
 import { db } from '~/drizzle/db'
+import { maskSystemSettingsSecrets } from '../system-settings/secretMask'
 import {
   apiKeys,
   apiKeyPermissions,
@@ -66,9 +67,10 @@ export default defineEventHandler(async (event) => {
           const usersData = await db.select().from(users)
           const settingsData = await db.select().from(notificationSettings)
 
-          // 手动关联通知设置
+          // 手动关联通知设置，并脱敏密码
           return usersData.map((user) => ({
             ...user,
+            password: user.password ? '[REDACTED]' : user.password,
             notificationSettings: settingsData.filter((setting) => setting.userId === user.id)
           }))
         },
@@ -401,7 +403,10 @@ export default defineEventHandler(async (event) => {
     // 如果包含系统数据，添加系统设置表
     if (includeSystemData) {
       tablesToBackup.systemSettings = {
-        query: () => db.select().from(systemSettings),
+        query: async () => {
+          const rows = await db.select().from(systemSettings)
+          return rows.map(row => maskSystemSettingsSecrets(row))
+        },
         description: '系统设置'
       }
     }
@@ -491,7 +496,7 @@ export default defineEventHandler(async (event) => {
         console.error(`备份表 ${tableName} 失败:`, error)
         throw createError({
           statusCode: 500,
-          message: `备份表 ${tableName} 失败：${error.message}`
+          message: '备份表 ${tableName} 失败'
         })
       }
     }
@@ -584,7 +589,7 @@ export default defineEventHandler(async (event) => {
     console.error('创建数据库备份失败:', error)
     throw createError({
       statusCode: error.statusCode || 500,
-      message: error.message || '创建数据库备份失败'
+      message: '创建数据库备份失败'
     })
   }
 })

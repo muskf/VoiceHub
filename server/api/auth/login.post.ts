@@ -20,14 +20,25 @@ import { getClientIP } from '~~/server/utils/ip-utils'
 
 // 导入验证码校验函数
 import { verifyAndConsumeCaptcha } from '~~/server/utils/captcha'
+import { checkRateLimit } from '~~/server/utils/rateLimiter'
 import { type SystemSettings } from '~/drizzle/schema'
 
 export default defineEventHandler(async (event) => {
   const startTime = Date.now()
-  
+
+  // IP 级别限流：每分钟最多 30 次登录尝试
+  const clientIp = getClientIP(event)
+  const loginRateLimitKey = `login_ip:${clientIp}`
+  const loginLimitResult = checkRateLimit(loginRateLimitKey, 30, 60 * 1000)
+  if (!loginLimitResult.isAllowed) {
+    throw createError({
+      statusCode: 429,
+      message: '登录请求过于频繁，请稍后再试'
+    })
+  }
+
   try {
     const body = await readBody(event)
-    const clientIp = getClientIP(event)
     
     let captchaId = ''
     let captchaInput = ''

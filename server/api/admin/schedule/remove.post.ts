@@ -147,7 +147,7 @@ export default defineEventHandler(async (event) => {
     // 确保返回一个成功=false的响应，而不是抛出错误
     return {
       success: false,
-      message: error.message || '移除排期失败',
+      message: '移除排期失败',
       error: error.code || 'UNKNOWN_ERROR'
     }
   }

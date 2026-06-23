@@ -41,6 +41,16 @@ export default defineEventHandler(async (event) => {
     const backupDir = path.join(process.cwd(), 'backups')
     const filepath = path.join(backupDir, filename)
 
+    // 安全路径验证：确保解析后的路径在 backupDir 内
+    const resolvedPath = path.resolve(filepath)
+    const resolvedBackupDir = path.resolve(backupDir)
+    if (!resolvedPath.startsWith(resolvedBackupDir + path.sep) && resolvedPath !== resolvedBackupDir) {
+      throw createError({
+        statusCode: 400,
+        message: '无效的文件路径'
+      })
+    }
+
     // 检查文件是否存在
     try {
       await fs.access(filepath)
@@ -70,7 +80,7 @@ export default defineEventHandler(async (event) => {
     console.error('下载备份文件失败:', error)
     throw createError({
       statusCode: error.statusCode || 500,
-      message: error.message || '下载备份文件失败'
+      message: '下载备份文件失败'
     })
   }
 })

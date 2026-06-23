@@ -35,10 +35,21 @@ export default defineEventHandler(async (event) => {
     // 如果未提供邮箱，则进入第一步：检查账号并返回掩码邮箱
     if (!email) {
       if (!user) {
-        throw createError({ statusCode: 404, message: '找不到该账号名，请检查是否拼写错误' })
+        // 使用通用响应，防止用户名枚举
+        return {
+          success: true,
+          step: 2,
+          maskedEmail: '',
+          message: '如果账号存在且绑定了邮箱，验证信息将发送到您的邮箱'
+        }
       }
       if (!user.email) {
-        throw createError({ statusCode: 400, message: '该账号未绑定安全邮箱，无法通过此方式找回密码。请联系管理员。' })
+        return {
+          success: true,
+          step: 2,
+          maskedEmail: '',
+          message: '如果账号存在且绑定了邮箱，验证信息将发送到您的邮箱'
+        }
       }
       
       // 生成掩码邮箱 (例如: a***b@gmail.com)
@@ -63,11 +74,22 @@ export default defineEventHandler(async (event) => {
 
     // 无论是否匹配，都返回相同的成功提示
     if (user && user.email && user.email.toLowerCase() === email.toLowerCase()) {
+      // 使用随机令牌替代部分密码哈希，避免泄露密码信息
+      const { randomBytes } = await import('node:crypto')
+      const resetNonce = randomBytes(32).toString('hex')
+
+      // 将令牌存入 captchaStore（5 分钟过期）
+      const { setStore } = await import('~~/server/utils/captchaStore')
+      await setStore(`password_reset:${user.id}`, JSON.stringify({
+        nonce: resetNonce,
+        userId: user.id,
+        expiresAt: Date.now() + 15 * 60 * 1000
+      }), 15 * 60)
+
       const payload = {
         type: 'password_reset',
         userId: user.id,
-        // 仅截取密码哈希的前10位，防止完整哈希泄露被离线破解
-        hash: user.password.substring(0, 10)
+        nonce: resetNonce.substring(0, 16) // 仅放前16位到JWT中
       }
       const token = JWTEnhanced.sign(payload, { expiresIn: '15m' })
 

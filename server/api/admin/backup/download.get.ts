@@ -78,7 +78,7 @@ export default defineEventHandler(async (event) => {
     console.error('下载备份文件失败:', error)
     throw createError({
       statusCode: error.statusCode || 500,
-      message: error.message || '下载备份文件失败'
+      message: '下载备份文件失败'
     })
   }
 })

@@ -319,7 +319,7 @@ export default defineEventHandler(async (event) => {
     console.error('发布排期失败:', error)
     throw createError({
       statusCode: 500,
-      message: error.message || '发布排期失败'
+      message: '发布排期失败'
     })
   }
 })

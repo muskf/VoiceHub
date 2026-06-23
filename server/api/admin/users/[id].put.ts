@@ -215,7 +215,7 @@ export default defineEventHandler(async (event) => {
 
     throw createError({
       statusCode: 500,
-      message: '更新用户失败: ' + error.message
+      message: '更新用户失败'
     })
   }
 })

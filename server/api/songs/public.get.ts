@@ -470,7 +470,7 @@ export default defineEventHandler(async (event) => {
     console.error('获取公共排期失败:', error)
     throw createError({
       statusCode: 500,
-      message: error.message || '获取排期数据失败'
+      message: '获取排期数据失败'
     })
   }
 })
