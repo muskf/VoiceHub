@@ -24,6 +24,7 @@ export default defineEventHandler(async (event) => {
     '/api/auth/login',
     '/api/auth/bind', // 账号绑定
     '/api/auth/oauth-register',
+    '/api/auth/register',
     '/api/auth/2fa/verify',
     '/api/auth/2fa/send-email',
     '/api/auth/forgot-password', // 找回密码

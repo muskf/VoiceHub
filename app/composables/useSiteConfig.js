@@ -67,6 +67,7 @@ export const useSiteConfig = () => {
         enableCollaborativeSubmission: true,
         enableSubmissionRemarks: false,
         allowOAuthRegistration: false,
+        allowEmailRegistration: false,
         captchaEnabled: false,
         captchaProvider: 'graphic',
         turnstileSiteKey: '',
@@ -106,6 +107,7 @@ export const useSiteConfig = () => {
   const enableCardCodeRequests = computed(() => siteConfig.value.enableCardCodeRequests === true)
   const requireCardCodeForRequests = computed(() => siteConfig.value.requireCardCodeForRequests === true)
   const allowOAuthRegistration = computed(() => siteConfig.value.allowOAuthRegistration === true)
+  const allowEmailRegistration = computed(() => siteConfig.value.allowEmailRegistration === true)
   const captchaEnabled = computed(() => siteConfig.value.captchaEnabled === true)
   const captchaProvider = computed(() => siteConfig.value.captchaProvider || 'graphic')
   const turnstileSiteKey = computed(() => siteConfig.value.turnstileSiteKey || '')
@@ -173,6 +175,7 @@ export const useSiteConfig = () => {
     enableCardCodeRequests,
     requireCardCodeForRequests,
     allowOAuthRegistration,
+    allowEmailRegistration,
     captchaEnabled,
     captchaProvider,
     turnstileSiteKey,
