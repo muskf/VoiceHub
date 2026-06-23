@@ -194,6 +194,10 @@ export const systemSettings = pgTable('SystemSettings', {
   googleOAuthEnabled: boolean('googleOAuthEnabled').default(false).notNull(),
   googleClientId: text('googleClientId'),
   googleClientSecret: text('googleClientSecret'),
+  // QQ OAuth (QQ互联)
+  qqOAuthEnabled: boolean('qqOAuthEnabled').default(false).notNull(),
+  qqClientId: text('qqClientId'),
+  qqClientSecret: text('qqClientSecret'),
   // Custom OAuth2
   customOAuthEnabled: boolean('customOAuthEnabled').default(false).notNull(),
   customOAuthDisplayName: text('customOAuthDisplayName'),

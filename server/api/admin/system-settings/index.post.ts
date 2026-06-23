@@ -392,6 +392,8 @@ export default defineEventHandler(async (event) => {
         : settings?.casdoorOAuthEnabled ?? false
     const nextGoogleOAuthEnabled =
       body.googleOAuthEnabled !== undefined ? body.googleOAuthEnabled : settings?.googleOAuthEnabled ?? false
+    const nextQqOAuthEnabled =
+      body.qqOAuthEnabled !== undefined ? body.qqOAuthEnabled : settings?.qqOAuthEnabled ?? false
     const nextCustomOAuthEnabled =
       body.customOAuthEnabled !== undefined ? body.customOAuthEnabled : settings?.customOAuthEnabled ?? false
 
@@ -399,6 +401,7 @@ export default defineEventHandler(async (event) => {
       nextGithubOAuthEnabled ||
       nextCasdoorOAuthEnabled ||
       nextGoogleOAuthEnabled ||
+      nextQqOAuthEnabled ||
       nextCustomOAuthEnabled
     ) {
       if (!nextOauthRedirectUri || !nextOauthStateSecret) {
@@ -496,6 +499,31 @@ export default defineEventHandler(async (event) => {
 
     if (body.googleClientSecret !== undefined && body.googleClientSecret !== SECRET_FIELD_MASK) {
       updateData.googleClientSecret = body.googleClientSecret
+    }
+
+    // QQ OAuth (QQ互联)
+    if (body.qqOAuthEnabled !== undefined) {
+      if (typeof body.qqOAuthEnabled !== 'boolean') {
+        throw createError({
+          statusCode: 400,
+          message: 'qqOAuthEnabled 必须是布尔值'
+        })
+      }
+      if (body.qqOAuthEnabled && (!body.qqClientId && !settings?.qqClientId)) {
+        throw createError({ statusCode: 400, message: '启用 QQ 登录时必须提供 APP ID' })
+      }
+      if (body.qqOAuthEnabled && (!body.qqClientSecret && !settings?.qqClientSecret)) {
+        throw createError({ statusCode: 400, message: '启用 QQ 登录时必须提供 APP KEY' })
+      }
+      updateData.qqOAuthEnabled = body.qqOAuthEnabled
+    }
+
+    if (body.qqClientId !== undefined) {
+      updateData.qqClientId = body.qqClientId
+    }
+
+    if (body.qqClientSecret !== undefined && body.qqClientSecret !== SECRET_FIELD_MASK) {
+      updateData.qqClientSecret = body.qqClientSecret
     }
 
     // Custom OAuth2

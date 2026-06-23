@@ -17,6 +17,7 @@
         <AuthProvidersGitHubIcon v-if="provider.key === 'github'" />
         <AuthProvidersCasdoorIcon v-else-if="provider.key === 'casdoor'" />
         <AuthProvidersGoogleIcon v-else-if="provider.key === 'google'" />
+        <AuthProvidersQQIcon v-else-if="provider.key === 'qq'" />
         <Shield v-else :size="18" />
       </button>
     </div>
@@ -50,6 +51,9 @@ const providerButtonClass = (key: string) => {
   }
   if (key === 'google') {
     return `${baseClass} hover:bg-white hover:text-black hover:border-[#dadce0]`
+  }
+  if (key === 'qq') {
+    return `${baseClass} hover:bg-[#12B7F5] hover:text-white hover:border-[#12B7F5]`
   }
   if (key === 'oauth2') {
     return `${baseClass} hover:bg-[#0f766e] hover:text-white hover:border-[#0f766e]`

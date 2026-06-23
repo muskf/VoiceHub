@@ -260,6 +260,116 @@ const googleStrategy: OAuthStrategy = {
   }
 }
 
+// QQ互联 策略实现
+const qqStrategy: OAuthStrategy = {
+  getAuthorizeUrl(redirectUri: string, state: string, config?: ProviderRuntimeConfig) {
+    const clientId = config?.clientId || process.env.QQ_CLIENT_ID
+    if (!clientId)
+      throw createError({ statusCode: 500, message: 'QQ APP ID not configured' })
+
+    const params = new URLSearchParams({
+      response_type: 'code',
+      client_id: clientId,
+      redirect_uri: redirectUri,
+      state,
+      scope: 'get_user_info'
+    })
+
+    return `https://graph.qq.com/oauth2.0/authorize?${params.toString()}`
+  },
+
+  async exchangeToken(code: string, redirectUri: string, config?: ProviderRuntimeConfig) {
+    const clientId = config?.clientId || process.env.QQ_CLIENT_ID
+    const clientSecret = config?.clientSecret || process.env.QQ_CLIENT_SECRET
+
+    if (!clientId || !clientSecret) {
+      throw createError({ statusCode: 500, message: 'QQ OAuth config missing' })
+    }
+
+    try {
+      const params = new URLSearchParams({
+        grant_type: 'authorization_code',
+        client_id: clientId,
+        client_secret: clientSecret,
+        code,
+        redirect_uri: redirectUri,
+        fmt: 'json'
+      })
+
+      const tokenResponse = await $fetch<any>(
+        `https://graph.qq.com/oauth2.0/token?${params.toString()}`,
+        { headers: { Accept: 'application/json' } }
+      )
+
+      if (tokenResponse.error) {
+        console.error('QQ Token Error:', tokenResponse.error, tokenResponse.error_description)
+        throw new Error(tokenResponse.error_description || '授权失败，请重试')
+      }
+
+      if (!tokenResponse.access_token) {
+        console.error('QQ Token Response missing access_token')
+        throw new Error('未能获取访问令牌')
+      }
+
+      if (!tokenResponse.openid) {
+        console.error('QQ Token Response missing openid')
+        throw new Error('未能获取用户标识')
+      }
+
+      // 将 openid 编码到 accessToken 字符串中，供 getUserInfo 解析
+      return `${tokenResponse.access_token}|${tokenResponse.openid}`
+    } catch (e: any) {
+      console.error('QQ token exchange failed', e.message || e)
+      const errorMessage = e.data?.error_description || e.message || '令牌请求失败'
+      throw new Error(errorMessage)
+    }
+  },
+
+  async getUserInfo(accessToken: string, config?: ProviderRuntimeConfig) {
+    const clientId = config?.clientId || process.env.QQ_CLIENT_ID
+    if (!clientId) {
+      throw createError({ statusCode: 500, message: 'QQ APP ID not configured' })
+    }
+
+    // 解析 exchangeToken 编码的 accessToken|openid
+    const separatorIndex = accessToken.indexOf('|')
+    const actualToken = separatorIndex >= 0 ? accessToken.substring(0, separatorIndex) : accessToken
+    const openid = separatorIndex >= 0 ? accessToken.substring(separatorIndex + 1) : ''
+
+    if (!openid) {
+      throw new Error('缺少 QQ 用户标识 (openid)')
+    }
+
+    try {
+      const params = new URLSearchParams({
+        access_token: actualToken,
+        oauth_consumer_key: clientId,
+        openid
+      })
+
+      const userInfo = await $fetch<any>(
+        `https://graph.qq.com/user/get_user_info?${params.toString()}`,
+        { headers: { Accept: 'application/json' } }
+      )
+
+      if (userInfo.ret && userInfo.ret !== 0) {
+        console.error('QQ user info error:', userInfo.ret, userInfo.msg)
+        throw new Error(userInfo.msg || '获取用户信息失败')
+      }
+
+      return {
+        id: openid,
+        username: userInfo.nickname || openid,
+        name: userInfo.nickname,
+        avatar: userInfo.figureurl_qq_2 || userInfo.figureurl_qq_1
+      }
+    } catch (e: any) {
+      console.error('QQ user info failed', e.message || e)
+      throw new Error(e.message || '获取用户信息失败')
+    }
+  }
+}
+
 const customOAuth2Strategy: OAuthStrategy = {
   getAuthorizeUrl(redirectUri: string, state: string, config?: ProviderRuntimeConfig) {
     const authorizeUrl = config?.authorizeUrl
@@ -382,6 +492,7 @@ const strategies: Record<string, OAuthStrategy> = {
   github: githubStrategy,
   casdoor: casdoorStrategy,
   google: googleStrategy,
+  qq: qqStrategy,
   oauth2: customOAuth2Strategy
 }
 
