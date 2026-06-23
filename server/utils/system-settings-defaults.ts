@@ -73,6 +73,7 @@ export const PUBLIC_SETTINGS_FIELDS = [
   'forceBlockAllRequests',
   'smtpEnabled',
   'allowOAuthRegistration',
+  'allowEmailRegistration',
   'githubOAuthEnabled',
   'casdoorOAuthEnabled',
   'googleOAuthEnabled',

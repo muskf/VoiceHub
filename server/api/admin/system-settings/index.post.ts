@@ -348,6 +348,16 @@ export default defineEventHandler(async (event) => {
       updateData.allowOAuthRegistration = body.allowOAuthRegistration
     }
 
+    if (body.allowEmailRegistration !== undefined) {
+      if (typeof body.allowEmailRegistration !== 'boolean') {
+        throw createError({
+          statusCode: 400,
+          message: 'allowEmailRegistration 必须是布尔值'
+        })
+      }
+      updateData.allowEmailRegistration = body.allowEmailRegistration
+    }
+
     if (body.oauthRedirectUri !== undefined) {
       const normalizedOauthRedirectUri =
         typeof body.oauthRedirectUri === 'string' ? body.oauthRedirectUri.trim() : body.oauthRedirectUri
