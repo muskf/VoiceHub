@@ -43,6 +43,28 @@
         </div>
       </div>
 
+      <div class="flex items-center justify-between bg-zinc-900/50 p-4 rounded-xl border border-zinc-800/50">
+        <div>
+          <label :class="labelClass">允许邮箱注册</label>
+          <p class="text-[10px] text-zinc-600 mt-1">开启后，用户可通过邮箱验证码自主注册账号（需先配置 SMTP 邮件服务）</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <span
+            :class="[
+              'text-[10px] font-bold',
+              formData.allowEmailRegistration ? 'text-green-500' : 'text-zinc-500'
+            ]"
+          >
+            {{ formData.allowEmailRegistration ? '已允许' : '未允许' }}
+          </span>
+          <input
+            v-model="formData.allowEmailRegistration"
+            type="checkbox"
+            class="w-4 h-4 rounded border-zinc-800 bg-zinc-900 accent-green-600 cursor-pointer"
+          >
+        </div>
+      </div>
+
       <div>
         <label :class="labelClass">OAuth 重定向 URI</label>
         <p class="text-[10px] text-zinc-600 px-1 mb-2">

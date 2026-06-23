@@ -316,6 +316,9 @@
 
     <div class="form-footer">
       <p class="help-text">不同VoiceHub平台的账号不互通</p>
+      <p v-if="!isBindMode && allowEmailRegistration" class="register-link">
+        没有账号？<NuxtLink to="/register">邮箱注册</NuxtLink>
+      </p>
     </div>
 
     <AuthTwoFactorVerify
@@ -343,7 +346,7 @@ import CustomSelect from '~/components/UI/Common/CustomSelect.vue'
 import CaptchaInput from './CaptchaInput.vue'
 import TurnstileWidget from './TurnstileWidget.vue'
 
-const { allowOAuthRegistration, fetchSiteConfig, smtpEnabled, captchaEnabled, captchaProvider } = useSiteConfig()
+const { allowOAuthRegistration, allowEmailRegistration, fetchSiteConfig, smtpEnabled, captchaEnabled, captchaProvider } = useSiteConfig()
 
 const route = useRoute()
 const isBindMode = computed(() => route.query.action === 'bind')
@@ -926,6 +929,22 @@ const handleWebAuthnLogin = async () => {
   color: var(--text-quaternary);
   margin: 0;
   line-height: 1.5;
+}
+
+.register-link {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  margin: 8px 0 0;
+}
+
+.register-link a {
+  color: var(--accent-primary, #3b82f6);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.register-link a:hover {
+  text-decoration: underline;
 }
 
 .help-text code {

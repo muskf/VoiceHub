@@ -177,6 +177,7 @@ export const systemSettings = pgTable('SystemSettings', {
   
   // OAuth 配置
   allowOAuthRegistration: boolean('allowOAuthRegistration').default(false).notNull(),
+  allowEmailRegistration: boolean('allowEmailRegistration').default(false).notNull(),
   oauthRedirectUri: text('oauthRedirectUri'),
   oauthStateSecret: text('oauthStateSecret'),
   oauthProviders: text('oauthProviders').default('[]'),

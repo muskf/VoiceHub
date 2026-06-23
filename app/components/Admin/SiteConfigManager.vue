@@ -111,32 +111,45 @@
           <ImageIcon :size="16" class="text-purple-500" /> 视觉识别
         </h3>
         <div class="space-y-4">
-          <div>
-            <label :class="labelClass">站点 Logo URL</label>
-            <input
-              v-model="formData.siteLogoUrl"
-              type="text"
-              placeholder="请输入Logo图片URL"
-              :class="inputClass"
-            >
-          </div>
-          <div>
-            <label :class="labelClass">首页学校 Logo URL (大尺寸)</label>
-            <input
-              v-model="formData.schoolLogoHomeUrl"
-              type="text"
-              placeholder="请输入首页学校Logo URL"
-              :class="inputClass"
-            >
-          </div>
-          <div>
-            <label :class="labelClass">打印排期 Logo URL (小尺寸)</label>
-            <input
-              v-model="formData.schoolLogoPrintUrl"
-              type="text"
-              placeholder="请输入打印页学校Logo URL"
-              :class="inputClass"
-            >
+          <div v-for="logoField in logoFields" :key="logoField.key" class="space-y-2">
+            <label :class="labelClass">{{ logoField.label }}</label>
+            <div class="flex items-center gap-2">
+              <input
+                v-model="formData[logoField.key]"
+                type="text"
+                :placeholder="logoField.placeholder"
+                :class="[inputClass, 'flex-1']"
+              >
+              <label
+                class="flex-shrink-0 px-3 py-2.5 bg-blue-600/20 border border-blue-500/30 hover:bg-blue-600/30 text-blue-400 text-xs font-bold rounded-xl cursor-pointer transition-all"
+              >
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/gif,image/svg+xml,image/webp"
+                  class="hidden"
+                  @change="(e) => handleLogoUpload(e, logoField.key, logoField.type)"
+                >
+                上传
+              </label>
+              <button
+                v-if="formData[logoField.key] && formData[logoField.key].startsWith('/uploads/logos/')"
+                class="flex-shrink-0 px-3 py-2.5 bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 text-rose-400 text-xs font-bold rounded-xl transition-all"
+                type="button"
+                @click="handleLogoDelete(logoField.key)"
+              >
+                删除
+              </button>
+            </div>
+            <!-- 预览 -->
+            <div v-if="formData[logoField.key]" class="flex items-center gap-3 p-2 bg-zinc-950 rounded-lg border border-zinc-800/50">
+              <img
+                :src="formData[logoField.key]"
+                :alt="logoField.label"
+                class="w-12 h-12 object-contain rounded bg-zinc-900 p-1"
+                @error="$event.target.style.display='none'"
+              >
+              <span class="text-[10px] text-zinc-500 truncate flex-1">{{ formData[logoField.key] }}</span>
+            </div>
           </div>
         </div>
       </section>
@@ -508,6 +521,49 @@ const inputClass =
 const labelClass = 'text-[10px] font-black text-zinc-600 uppercase tracking-widest px-1 block mb-2'
 const cardClass = 'bg-zinc-900/40 border border-zinc-800 rounded-2xl p-6 shadow-xl space-y-6'
 
+// Logo 上传字段配置
+const logoFields = [
+  { key: 'siteLogoUrl', label: '站点 Logo', placeholder: '请输入或上传站点 Logo', type: 'site' },
+  { key: 'schoolLogoHomeUrl', label: '首页学校 Logo (大尺寸)', placeholder: '请输入或上传首页学校 Logo', type: 'school-home' },
+  { key: 'schoolLogoPrintUrl', label: '打印排期 Logo (小尺寸)', placeholder: '请输入或上传打印页 Logo', type: 'school-print' }
+]
+
+const handleLogoUpload = async (event, fieldKey, logoType) => {
+  const file = event.target.files?.[0]
+  if (!file) return
+
+  const form = new FormData()
+  form.append('file', file)
+  form.append('type', logoType)
+
+  try {
+    const res = await $fetch('/api/admin/upload-logo', { method: 'POST', body: form })
+    formData.value[fieldKey] = res.url
+    showNotification('Logo 上传成功', 'success')
+  } catch (e) {
+    showNotification(e.data?.message || '上传失败', 'error')
+  }
+
+  // 重置 input 以便重复选择同一文件
+  event.target.value = ''
+}
+
+const handleLogoDelete = async (fieldKey) => {
+  const url = formData.value[fieldKey]
+  if (!url || !url.startsWith('/uploads/logos/')) {
+    formData.value[fieldKey] = ''
+    return
+  }
+
+  try {
+    await $fetch('/api/admin/delete-logo', { method: 'POST', body: { url } })
+    formData.value[fieldKey] = ''
+    showNotification('Logo 已删除', 'success')
+  } catch (e) {
+    showNotification(e.data?.message || '删除失败', 'error')
+  }
+}
+
 const defaultSubmissionGuidelines = `1. 投稿时无需加入书名号
 2. 除DJ外，其他类型歌曲均接收（包括小语种）
 3. 禁止投递含有违规内容的歌曲
@@ -546,6 +602,7 @@ const formData = ref({
   turnstileSecretKey: '',
   captchaMaxFailures: 3,
   allowOAuthRegistration: false,
+  allowEmailRegistration: false,
   oauthRedirectUri: '',
   oauthStateSecret: '',
   githubOAuthEnabled: false,
@@ -654,6 +711,7 @@ const loadConfig = async () => {
       turnstileSecretKey: undefined,
       captchaMaxFailures: data.captchaMaxFailures ?? 3,
       allowOAuthRegistration: !!data.allowOAuthRegistration,
+      allowEmailRegistration: !!data.allowEmailRegistration,
       oauthRedirectUri: data.oauthRedirectUri || '',
       oauthStateSecret: data.oauthStateSecret || '',
       githubOAuthEnabled: !!data.githubOAuthEnabled,
