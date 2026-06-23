@@ -45,8 +45,12 @@ const backendSentryDsnDefault = process.env.SENTRY_DSN || ''
 const frontendSentryDsnDefault = process.env.NUXT_PUBLIC_SENTRY_DSN || ''
 const sentryRuntimeEnabled = process.env.NODE_ENV === 'production'
 const jwtSecret = process.env.JWT_SECRET || ''
-if (process.env.NODE_ENV === 'production' && (!jwtSecret || jwtSecret.length < 32)) {
-  throw new Error('JWT_SECRET 环境变量未设置或长度不足32位，请配置一个强随机字符串后重新启动')
+if (process.env.NODE_ENV === 'production' && !process.env.NUXT_BUILD && (!jwtSecret || jwtSecret.length < 32)) {
+  // 仅运行时检查，构建阶段跳过
+  const isBuilding = process.argv.some(arg => arg.includes('build') || arg.includes('prepare'))
+  if (!isBuilding) {
+    throw new Error('JWT_SECRET 环境变量未设置或长度不足32位，请配置一个强随机字符串后重新启动')
+  }
 }
 
 // 构造绝对路径 Logo URL 用于 SEO 标签，如果没有 host，则回退为相对路径

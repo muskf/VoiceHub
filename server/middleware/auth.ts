@@ -36,6 +36,7 @@ export default defineEventHandler(async (event) => {
     '/api/songs/count',
     '/api/songs/public',
     '/api/site-config',
+    '/api/uploads/logos/', // 上传的 Logo 图片（公开访问）
     '/api/proxy/', // 代理API路径，用于图片代理等功能
     '/api/bilibili/', // 哔哩哔哩相关API
     '/api/api-enhanced/', // 网易云音乐API代理路径

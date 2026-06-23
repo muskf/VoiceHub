@@ -48,12 +48,18 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 403, message: '只有管理员可以上传 Logo' })
   }
 
-  // 创建上传目录
+  // 创建上传目录（public 和持久化存储两个位置）
   const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'logos')
+  const storageDir = path.join(process.cwd(), 'uploads', 'logos')
   try {
     await fs.access(uploadDir)
   } catch {
     await fs.mkdir(uploadDir, { recursive: true })
+  }
+  try {
+    await fs.access(storageDir)
+  } catch {
+    await fs.mkdir(storageDir, { recursive: true })
   }
 
   // 解析上传的文件 — 要求 MIME 和扩展名同时合法
@@ -106,12 +112,16 @@ export default defineEventHandler(async (event) => {
   const timestamp = Date.now()
   const newFilename = `${logoType}-${timestamp}${ext}`
   const newFilepath = path.join(uploadDir, newFilename)
+  const storageFilepath = path.join(storageDir, newFilename)
 
-  // 移动文件
-  await fs.rename(uploadedFile.filepath, newFilepath)
+  // 保存文件到两个位置
+  const fileBuffer = await fs.readFile(uploadedFile.filepath)
+  await fs.writeFile(newFilepath, fileBuffer)
+  await fs.writeFile(storageFilepath, fileBuffer)
+  await fs.unlink(uploadedFile.filepath).catch(() => {})
 
-  // 返回 URL 路径
-  const urlPath = `/uploads/logos/${newFilename}`
+  // 返回 API 端点 URL（生产环境通过 API 提供文件服务）
+  const urlPath = `/api/uploads/logos/${newFilename}`
 
   console.log(`[Logo] 管理员 ${user.username} 上传了 ${logoType} Logo: ${newFilename}`)
 
