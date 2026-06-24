@@ -151,10 +151,50 @@
               <span class="text-[10px] text-zinc-500 truncate flex-1">{{ formData[logoField.key] }}</span>
             </div>
           </div>
+
+          <!-- 品牌 Logo（替换 public/images/ 下的默认文件） -->
+          <div class="border-t border-zinc-800 pt-4 mt-4">
+            <h4 class="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">品牌 Logo（替换默认图片）</h4>
+            <div class="space-y-3">
+              <div v-for="bf in brandLogoFields" :key="bf.key" class="space-y-1">
+                <label :class="labelClass">{{ bf.label }}</label>
+                <div class="flex items-center gap-2">
+                  <span class="text-[11px] text-zinc-500 flex-1 truncate">
+                    {{ brandLogoUrls[bf.key] || bf.placeholder }}
+                  </span>
+                  <label class="flex-shrink-0 px-3 py-2 bg-blue-600/20 border border-blue-500/30 hover:bg-blue-600/30 text-blue-400 text-xs font-bold rounded-xl cursor-pointer transition-all">
+                    <input
+                      type="file"
+                      :accept="bf.accept"
+                      class="hidden"
+                      @change="(e) => handleLogoUpload(e, bf.key, bf.type)"
+                    >
+                    上传
+                  </label>
+                  <button
+                    v-if="brandLogoUrls[bf.key]"
+                    class="flex-shrink-0 px-3 py-2 bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 text-rose-400 text-xs font-bold rounded-xl transition-all"
+                    type="button"
+                    @click="handleBrandLogoDelete(bf.key, bf.type)"
+                  >
+                    删除
+                  </button>
+                </div>
+                <!-- 预览 -->
+                <div v-if="brandLogoUrls[bf.key]" class="flex items-center gap-3 p-2 bg-zinc-950 rounded-lg border border-zinc-800/50">
+                  <img
+                    :src="brandLogoUrls[bf.key]"
+                    :alt="bf.label"
+                    class="w-12 h-12 object-contain rounded bg-zinc-900 p-1"
+                    @error="$event.target.style.display='none'"
+                  >
+                  <span class="text-[10px] text-zinc-500 truncate flex-1">{{ brandLogoUrls[bf.key] }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
-
-      <!-- 投稿逻辑设置 -->
       <section :class="cardClass">
         <h3
           class="text-sm font-black text-zinc-100 uppercase tracking-widest flex items-center gap-2 border-b border-zinc-800 pb-4"
@@ -528,6 +568,15 @@ const logoFields = [
   { key: 'schoolLogoPrintUrl', label: '打印排期 Logo (小尺寸)', placeholder: '请输入或上传打印页 Logo', type: 'school-print' }
 ]
 
+// 品牌 Logo 字段（替换 public/images/ 下的默认文件）
+const brandLogoFields = [
+  { key: '_brandPng', label: '品牌 Logo (PNG)', placeholder: '替换 public/images/logo.png', type: 'brand-png', accept: 'image/png,image/jpeg,image/webp' },
+  { key: '_brand144', label: '品牌 Logo 144px', placeholder: '替换 public/images/logo-144.png', type: 'brand-144', accept: 'image/png' },
+  { key: '_brandSvg', label: '品牌 Logo (SVG)', placeholder: '替换 public/images/logo.svg', type: 'brand-svg', accept: 'image/svg+xml' }
+]
+
+const brandLogoUrls = ref<Record<string, string>>({})
+
 const handleLogoUpload = async (event, fieldKey, logoType) => {
   const file = event.target.files?.[0]
   if (!file) return
@@ -538,7 +587,12 @@ const handleLogoUpload = async (event, fieldKey, logoType) => {
 
   try {
     const res = await $fetch('/api/admin/upload-logo', { method: 'POST', body: form })
-    formData.value[fieldKey] = res.url
+    // 品牌 Logo 存在独立状态，其他 Logo 存在 formData
+    if (fieldKey.startsWith('_brand')) {
+      brandLogoUrls.value = { ...brandLogoUrls.value, [fieldKey]: res.url }
+    } else {
+      formData.value[fieldKey] = res.url
+    }
     showNotification('Logo 上传成功', 'success')
   } catch (e) {
     showNotification(e.data?.message || '上传失败', 'error')
@@ -559,6 +613,19 @@ const handleLogoDelete = async (fieldKey) => {
     await $fetch('/api/admin/delete-logo', { method: 'POST', body: { url } })
     formData.value[fieldKey] = ''
     showNotification('Logo 已删除', 'success')
+  } catch (e) {
+    showNotification(e.data?.message || '删除失败', 'error')
+  }
+}
+
+const handleBrandLogoDelete = async (fieldKey, logoType) => {
+  const url = brandLogoUrls.value[fieldKey]
+  if (!url) return
+
+  try {
+    await $fetch('/api/admin/delete-logo', { method: 'POST', body: { url } })
+    brandLogoUrls.value = { ...brandLogoUrls.value, [fieldKey]: '' }
+    showNotification('品牌 Logo 已删除，将恢复默认图片', 'success')
   } catch (e) {
     showNotification(e.data?.message || '删除失败', 'error')
   }

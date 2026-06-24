@@ -9,10 +9,11 @@ const ALLOWED_MIMES = new Set([
   'image/gif',
   'image/webp',
   'image/x-icon',
-  'image/vnd.microsoft.icon'
+  'image/vnd.microsoft.icon',
+  'image/svg+xml'
 ])
 
-const ALLOWED_EXTS = new Set(['.png', '.jpg', '.jpeg', '.gif', '.webp', '.ico'])
+const ALLOWED_EXTS = new Set(['.png', '.jpg', '.jpeg', '.gif', '.webp', '.ico', '.svg'])
 
 // Magic bytes for image type validation
 const MAGIC_BYTES: Record<string, number[][]> = {
@@ -86,7 +87,8 @@ export default defineEventHandler(async (event) => {
   }
 
   const logoType = (fields.type?.[0] || 'site').toString()
-  if (!['site', 'school-home', 'school-print'].includes(logoType)) {
+  const validTypes = ['site', 'school-home', 'school-print', 'brand-png', 'brand-144', 'brand-svg']
+  if (!validTypes.includes(logoType)) {
     throw createError({ statusCode: 400, message: '无效的 Logo 类型' })
   }
 
@@ -102,15 +104,19 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: `不支持的文件格式: ${ext}，仅支持 ${[...ALLOWED_EXTS].join(', ')}` })
   }
 
-  // Magic byte 校验：确保文件内容与扩展名匹配
-  if (!(await validateMagicBytes(uploadedFile.filepath, ext))) {
+  // Magic byte 校验：确保文件内容与扩展名匹配（SVG 跳过，因为是 XML 文本格式）
+  if (ext !== '.svg' && !(await validateMagicBytes(uploadedFile.filepath, ext))) {
     await fs.unlink(uploadedFile.filepath).catch(() => {})
     throw createError({ statusCode: 400, message: '文件内容与扩展名不匹配，请上传有效的图片文件' })
   }
 
-  // 生成安全的文件名
-  const timestamp = Date.now()
-  const newFilename = `${logoType}-${timestamp}${ext}`
+  // 生成安全的文件名（品牌 Logo 使用固定名称，其他使用时间戳）
+  const brandFilenames: Record<string, string> = {
+    'brand-png': 'brand-logo.png',
+    'brand-144': 'brand-logo-144.png',
+    'brand-svg': 'brand-logo.svg'
+  }
+  const newFilename = brandFilenames[logoType] || `${logoType}-${Date.now()}${ext}`
   const newFilepath = path.join(uploadDir, newFilename)
   const storageFilepath = path.join(storageDir, newFilename)
 
