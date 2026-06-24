@@ -90,6 +90,9 @@ export const useSiteConfig = () => {
   const logoUrl = computed(() => siteConfig.value.siteLogoUrl || '/favicon.ico')
   const schoolLogoHomeUrl = computed(() => siteConfig.value.schoolLogoHomeUrl || '')
   const schoolLogoPrintUrl = computed(() => siteConfig.value.schoolLogoPrintUrl || '')
+  const brandLogoPngUrl = computed(() => siteConfig.value.brandLogoPngUrl || '')
+  const brandLogo144Url = computed(() => siteConfig.value.brandLogo144Url || '')
+  const brandLogoSvgUrl = computed(() => siteConfig.value.brandLogoSvgUrl || '')
   const description = computed(
     () => siteConfig.value.siteDescription || '校园广播站点歌系统 - 让你的声音被听见'
   )
@@ -164,6 +167,9 @@ export const useSiteConfig = () => {
     logoUrl,
     schoolLogoHomeUrl,
     schoolLogoPrintUrl,
+    brandLogoPngUrl,
+    brandLogo144Url,
+    brandLogoSvgUrl,
     description,
     guidelines,
     icp,

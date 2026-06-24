@@ -193,11 +193,12 @@ import { computed, onMounted, onUnmounted, provide, ref, watch } from 'vue'
 import { Menu, ChevronUp } from 'lucide-vue-next'
 import { useAuth } from '~/composables/useAuth'
 import logo from '~~/public/images/logo.svg'
+const defaultLogo = logo
 import { usePermissions } from '~/composables/usePermissions'
 import { useSiteConfig } from '~/composables/useSiteConfig'
 
 // 使用站点配置
-const { siteTitle, initSiteConfig } = useSiteConfig()
+const { siteTitle, initSiteConfig , brandLogoSvgUrl } = useSiteConfig()
 
 // 导入组件
 

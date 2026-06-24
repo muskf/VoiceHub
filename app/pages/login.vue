@@ -32,9 +32,10 @@ import LoginForm from '~/components/Auth/LoginForm.vue'
 import logo from '~~/public/images/logo.svg'
 
 // 使用站点配置
-const { siteTitle, initSiteConfig, logoUrl, schoolLogoHomeUrl, icp: icpNumber } = useSiteConfig()
-// 主品牌Logo优先使用SVG，其次使用站点配置中非ICO的地址
+const { siteTitle, initSiteConfig, logoUrl, schoolLogoHomeUrl, brandLogoSvgUrl, icp: icpNumber } = useSiteConfig()
+// 主品牌Logo优先使用自定义上传SVG，其次siteLogoUrl，最后默认SVG
 const brandLogoSrc = computed(() => {
+  if (brandLogoSvgUrl.value) return brandLogoSvgUrl.value
   const url = logoUrl.value
   if (url && !url.endsWith('.ico')) return url
   return logo

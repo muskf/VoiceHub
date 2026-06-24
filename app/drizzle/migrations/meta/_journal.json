@@ -218,6 +218,13 @@
       "when": 1782173000000,
       "tag": "20260623000200_add_email_registration",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1782173100000,
+      "tag": "20260623000300_add_brand_logo_urls",
+      "breakpoints": true
     }
   ]
 }

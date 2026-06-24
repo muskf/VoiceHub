@@ -5,7 +5,7 @@
       <div class="info-section">
         <div class="info-content">
           <div class="logo-section">
-            <img alt="VoiceHub Logo" class="brand-logo" :src="logo" >
+            <img alt="VoiceHub Logo" class="brand-logo" :src="brandLogoSvgUrl || defaultLogo" >
             <h1 v-if="siteTitle" class="brand-title">{{ siteTitle || 'VoiceHub' }}</h1>
           </div>
 
@@ -92,9 +92,10 @@
 import ChangePasswordForm from '~/components/Auth/ChangePasswordForm.vue'
 import { ref } from 'vue'
 import logo from '~~/public/images/logo.svg'
+const defaultLogo = logo
 
 // 使用站点配置
-const { siteTitle, initSiteConfig } = useSiteConfig()
+const { siteTitle, initSiteConfig , brandLogoSvgUrl } = useSiteConfig()
 
 const auth = useAuth()
 const router = useRouter()

@@ -12,7 +12,7 @@
         <NuxtLink to="/" class="flex items-center gap-2.5 group">
           <!-- Logo 图标 -->
           <div class="flex-shrink-0 group-hover:scale-110 transition-all duration-300">
-            <img :src="logo" alt="VoiceHub Logo" class="w-8 h-8 object-contain" >
+            <img :src="brandLogoPngUrl || logo" alt="VoiceHub Logo" class="w-8 h-8 object-contain" >
           </div>
           <!-- 品牌文字 -->
           <div class="flex flex-col justify-center">

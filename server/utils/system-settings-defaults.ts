@@ -83,7 +83,10 @@ export const PUBLIC_SETTINGS_FIELDS = [
   'captchaEnabled',
   'captchaMaxFailures',
   'captchaProvider',
-  'turnstileSiteKey'
+  'turnstileSiteKey',
+  'brandLogoPngUrl',
+  'brandLogo144Url',
+  'brandLogoSvgUrl'
 ]
 
 export const filterPublicSettings = (data: any) => {

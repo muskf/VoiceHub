@@ -78,6 +78,18 @@ export default defineEventHandler(async (event) => {
       updateData.schoolLogoPrintUrl = body.schoolLogoPrintUrl
     }
 
+    if (body.brandLogoPngUrl !== undefined) {
+      updateData.brandLogoPngUrl = body.brandLogoPngUrl
+    }
+
+    if (body.brandLogo144Url !== undefined) {
+      updateData.brandLogo144Url = body.brandLogo144Url
+    }
+
+    if (body.brandLogoSvgUrl !== undefined) {
+      updateData.brandLogoSvgUrl = body.brandLogoSvgUrl
+    }
+
     if (body.siteDescription !== undefined) {
       updateData.siteDescription = body.siteDescription
     }

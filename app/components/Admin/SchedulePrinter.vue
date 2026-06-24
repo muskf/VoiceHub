@@ -449,7 +449,7 @@ const { canPrintSchedule } = usePermissions()
 const { getAuthConfig } = useAuth()
 
 // 站点配置
-const { siteTitle, schoolLogoPrintUrl, initSiteConfig } = useSiteConfig()
+const { siteTitle, schoolLogoPrintUrl, initSiteConfig , brandLogoPngUrl } = useSiteConfig()
 
 // 配置
 const config = useRuntimeConfig()

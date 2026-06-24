@@ -172,8 +172,9 @@
 <script setup>
 import { onMounted, computed } from 'vue'
 import logo from '~~/public/images/logo.svg'
+const defaultLogo = logo
 
-const { siteTitle, initSiteConfig, logoUrl, schoolLogoHomeUrl, allowEmailRegistration, refreshSiteConfig } = useSiteConfig()
+const { siteTitle, initSiteConfig, logoUrl, schoolLogoHomeUrl, allowEmailRegistration, refreshSiteConfig , brandLogoSvgUrl } = useSiteConfig()
 
 const brandLogoSrc = computed(() => {
   const url = logoUrl.value
