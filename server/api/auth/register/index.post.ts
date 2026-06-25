@@ -18,12 +18,16 @@ export default defineEventHandler(async (event) => {
 
   const clientIP = getClientIP(event)
 
-  // IP 级别限流
-  const rateLimitKey = `register_ip:${clientIP}`
-  const limitResult = checkRateLimit(rateLimitKey, 10, 60 * 60 * 1000)
-  if (!limitResult.isAllowed) {
-    const waitMinutes = Math.ceil((limitResult.resetTime - Date.now()) / 60000)
-    throw createError({ statusCode: 429, message: `注册操作过于频繁，请等待 ${waitMinutes} 分钟后再试` })
+  // ===== 防滥用多层限流 =====
+
+  // 1. IP 限流：每小时 10 次 + 每天 30 次
+  const ipHourLimit = checkRateLimit(`register_ip_h:${clientIP}`, 10, 60 * 60 * 1000)
+  if (!ipHourLimit.isAllowed) {
+    throw createError({ statusCode: 429, message: '注册操作过于频繁，请稍后再试' })
+  }
+  const ipDayLimit = checkRateLimit(`register_ip_d:${clientIP}`, 30, 24 * 60 * 60 * 1000)
+  if (!ipDayLimit.isAllowed) {
+    throw createError({ statusCode: 429, message: '今日注册次数已达上限' })
   }
 
   const body = await readBody(event)
@@ -49,8 +53,21 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: validationError })
   }
 
+  // 2. 邮箱限流：每小时 5 次
+  const emailHourLimit = checkRateLimit(`register_email_h:${email}`, 5, 60 * 60 * 1000)
+  if (!emailHourLimit.isAllowed) {
+    throw createError({ statusCode: 429, message: '该邮箱注册尝试过于频繁' })
+  }
+
+  // 3. 检查是否被锁定（连续 5 次验证码错误锁定 10 分钟）
+  const { getAndDelStore, setStore, getStore, incrStore, delStore } = await import('~~/server/utils/captchaStore')
+  const lockKey = `register_lock:${email}`
+  const isLocked = await getStore(lockKey)
+  if (isLocked) {
+    throw createError({ statusCode: 429, message: '该邮箱已被临时锁定，请10分钟后再试' })
+  }
+
   // 验证邮箱验证码（原子操作：获取并删除，防止竞态条件）
-  const { getAndDelStore, setStore } = await import('~~/server/utils/captchaStore')
   const storedData = await getAndDelStore(`register_code:${email}`)
   if (!storedData) {
     throw createError({ statusCode: 400, message: '验证码已过期或不存在，请重新获取' })
@@ -77,8 +94,24 @@ export default defineEventHandler(async (event) => {
     if (remainingMs > 0) {
       await setStore(`register_code:${email}`, storedData, Math.ceil(remainingMs / 1000))
     }
+
+    // 递增失败计数
+    const failKey = `register_fail:${email}`
+    const failCount = await incrStore(failKey, 10 * 60)
+
+    // 连续 5 次失败 → 锁定 10 分钟
+    if (failCount >= 5) {
+      await setStore(lockKey, '1', 10 * 60)
+      await delStore(failKey)
+      console.warn(`[Register] 邮箱 ${email} 连续验证失败 ${failCount} 次，已锁定 (IP: ${clientIP})`)
+      throw createError({ statusCode: 429, message: '验证码错误次数过多，该邮箱已被临时锁定10分钟' })
+    }
+
     throw createError({ statusCode: 400, message: '验证码错误' })
   }
+
+  // 验证成功 — 清除失败计数
+  await delStore(`register_fail:${email}`)
 
   // 检查邮箱是否已被使用
   const existingEmail = await db.select({ id: users.id }).from(users).where(eq(users.email, email)).limit(1)
