@@ -45,20 +45,39 @@ export default defineEventHandler(async (event) => {
   }
 
   // 失败锁定检查
-  const { getStore, setStore, incrStore, delStore } = await import('~~/server/utils/captchaStore')
+  const { getStore, setStore, getAndDelStore, incrStore, delStore } = await import('~~/server/utils/captchaStore')
   const lockKey = `phone_login_lock:${phone}`
   const isLocked = await getStore(lockKey)
   if (isLocked) {
     throw createError({ statusCode: 429, message: '该手机号已被临时锁定，请10分钟后再试' })
   }
 
-  // 通过阿里云号码认证服务校验验证码
-  const verifyResult = await verifyPnvsSmsCode(phone, code, {
-    accessKeyId: config.smsAliyunAccessKeyId || '',
-    accessKeySecret: config.smsAliyunAccessKeySecret || ''
-  })
+  // 校验验证码（本地存储，时序安全比较）
+  const storedData = await getAndDelStore(`phone_code:${phone}`)
+  if (!storedData) {
+    throw createError({ statusCode: 400, message: '验证码已过期，请重新获取' })
+  }
 
-  if (!verifyResult.success) {
+  let storedCode: { code: string; expiresAt: number }
+  try {
+    storedCode = JSON.parse(storedData)
+  } catch {
+    throw createError({ statusCode: 400, message: '验证码数据异常' })
+  }
+
+  if (Date.now() > storedCode.expiresAt) {
+    throw createError({ statusCode: 400, message: '验证码已过期，请重新获取' })
+  }
+
+  const { timingSafeEqual } = await import('node:crypto')
+  const storedBuf = Buffer.from(storedCode.code, 'utf8')
+  const inputBuf = Buffer.from(code, 'utf8')
+  if (storedBuf.length !== inputBuf.length || !timingSafeEqual(storedBuf, inputBuf)) {
+    // 恢复验证码允许重试
+    const remainingMs = storedCode.expiresAt - Date.now()
+    if (remainingMs > 0) {
+      await setStore(`phone_code:${phone}`, storedData, Math.ceil(remainingMs / 1000))
+    }
     // 递增失败计数
     const failKey = `phone_login_fail:${phone}`
     const failCount = await incrStore(failKey, 10 * 60)

@@ -35,7 +35,9 @@ export default defineEventHandler(async (event) => {
 
   const result = await sendPnvsSmsCode(phone, {
     accessKeyId: config.smsAliyunAccessKeyId,
-    accessKeySecret: config.smsAliyunAccessKeySecret
+    accessKeySecret: config.smsAliyunAccessKeySecret,
+    signName: config.smsAliyunSignName || '',
+    templateCode: config.smsAliyunTemplateCode || ''
   })
 
   if (result.success) {

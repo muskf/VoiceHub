@@ -67,8 +67,19 @@ export default defineEventHandler(async (event) => {
   // 5. 通过阿里云号码认证服务发送验证码
   const result = await sendPnvsSmsCode(phone, {
     accessKeyId: config.smsAliyunAccessKeyId || '',
-    accessKeySecret: config.smsAliyunAccessKeySecret || ''
+    accessKeySecret: config.smsAliyunAccessKeySecret || '',
+    signName: config.smsAliyunSignName || '',
+    templateCode: config.smsAliyunTemplateCode || ''
   })
+
+  // 存储验证码（5分钟过期），用于后续校验
+  if (result.success && result.code) {
+    const { setStore } = await import('~~/server/utils/captchaStore')
+    await setStore(`phone_code:${phone}`, JSON.stringify({
+      code: result.code,
+      expiresAt: Date.now() + 5 * 60 * 1000
+    }), 5 * 60)
+  }
 
   if (!result.success) {
     console.error(`[Phone] 短信发送失败: ${phone} - ${result.message}`)
