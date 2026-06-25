@@ -57,7 +57,7 @@ export async function sendPnvsSmsCode(
       CodeLength: '6',
       SignName: config.signName,
       TemplateCode: config.templateCode,
-      TemplateParam: JSON.stringify({ code })
+      TemplateParam: JSON.stringify({ code, min: '5' })
     }, config)
 
     if (data.Code === 'OK') {
