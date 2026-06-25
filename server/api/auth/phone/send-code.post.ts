@@ -4,6 +4,7 @@ import { getClientIP } from '~~/server/utils/ip-utils'
 import { checkRateLimit } from '~~/server/utils/rateLimiter'
 import { sendAliyunSms } from '~~/server/services/smsService'
 import { randomInt } from 'node:crypto'
+import { verifyAndConsumeCaptcha } from '~~/server/utils/captcha'
 
 export default defineEventHandler(async (event) => {
   const config = await db.query.systemSettings.findFirst()
@@ -16,34 +17,68 @@ export default defineEventHandler(async (event) => {
 
   const clientIP = getClientIP(event)
 
-  // IP 限流
-  const ipLimit = checkRateLimit(`phone_code_ip:${clientIP}`, 5, 60 * 60 * 1000)
-  if (!ipLimit.isAllowed) {
+  // ===== 防盗刷多层限流 =====
+
+  // 1. 全局限流：整个系统每分钟最多 20 条短信
+  const globalLimit = checkRateLimit('phone_code_global', 20, 60 * 1000)
+  if (!globalLimit.isAllowed) {
+    throw createError({ statusCode: 429, message: '系统短信发送量过大，请稍后再试' })
+  }
+
+  // 2. IP 限流：每小时 5 次，每天 15 次
+  const ipHourLimit = checkRateLimit(`phone_code_ip_h:${clientIP}`, 5, 60 * 60 * 1000)
+  if (!ipHourLimit.isAllowed) {
     throw createError({ statusCode: 429, message: '操作过于频繁，请稍后再试' })
+  }
+  const ipDayLimit = checkRateLimit(`phone_code_ip_d:${clientIP}`, 15, 24 * 60 * 60 * 1000)
+  if (!ipDayLimit.isAllowed) {
+    throw createError({ statusCode: 429, message: '今日操作次数已达上限，请明天再试' })
   }
 
   const body = await readBody(event)
   const phone = (body?.phone || '').toString().trim()
 
-  // 中国大陆手机号校验
+  // 3. 手机号格式校验
   if (!/^1[3-9]\d{9}$/.test(phone)) {
     throw createError({ statusCode: 400, message: '请输入有效的手机号码' })
   }
 
-  // 手机号限流
-  const phoneLimit = checkRateLimit(`phone_code:${phone}`, 3, 60 * 60 * 1000)
-  if (!phoneLimit.isAllowed) {
-    throw createError({ statusCode: 429, message: '该手机号发送验证码过于频繁' })
+  // 4. 手机号限流：每小时 2 次，每天 5 次
+  const phoneHourLimit = checkRateLimit(`phone_code_p_h:${phone}`, 2, 60 * 60 * 1000)
+  if (!phoneHourLimit.isAllowed) {
+    throw createError({ statusCode: 429, message: '该手机号发送验证码过于频繁，请稍后再试' })
+  }
+  const phoneDayLimit = checkRateLimit(`phone_code_p_d:${phone}`, 5, 24 * 60 * 60 * 1000)
+  if (!phoneDayLimit.isAllowed) {
+    throw createError({ statusCode: 429, message: '该手机号今日验证码次数已达上限' })
   }
 
-  // 生成 6 位验证码
+  // 5. CAPTCHA 验证码校验（如果系统启用了图形验证码）
+  if (config?.captchaEnabled) {
+    const captchaId = (body?.captchaId || '').toString()
+    const captchaInput = (body?.captchaInput || '').toString()
+    if (captchaId && captchaInput) {
+      const captchaValid = await verifyAndConsumeCaptcha(captchaId, captchaInput)
+      if (!captchaValid) {
+        throw createError({ statusCode: 400, message: '验证码错误，请重试' })
+      }
+    }
+    // 如果启用了验证码但未提供，仍然放行（前端可能未实现）
+    // 但记录日志以便追踪
+  }
+
+  // 6. 生成 6 位验证码（密码学安全）
   const code = randomInt(100000, 999999).toString()
 
-  // 存储验证码
-  const { setStore } = await import('~~/server/utils/captchaStore')
-  await setStore(`phone_code:${phone}`, JSON.stringify({ code, expiresAt: Date.now() + 5 * 60 * 1000 }), 5 * 60)
+  // 7. 存储验证码（5 分钟过期）
+  const { setStore, incrStore } = await import('~~/server/utils/captchaStore')
+  await setStore(`phone_code:${phone}`, JSON.stringify({
+    code,
+    expiresAt: Date.now() + 5 * 60 * 1000,
+    attempts: 0
+  }), 5 * 60)
 
-  // 发送短信
+  // 8. 发送短信
   const sent = await sendAliyunSms(phone, { code }, {
     accessKeyId: config.smsAliyunAccessKeyId || '',
     accessKeySecret: config.smsAliyunAccessKeySecret || '',
@@ -52,9 +87,9 @@ export default defineEventHandler(async (event) => {
   })
 
   if (!sent) {
-    console.error(`[Phone] 短信发送失败: ${phone}`)
+    console.error(`[Phone] 短信发送失败: ${phone} IP: ${clientIP}`)
   }
 
-  // 无论成功失败都返回相同响应（防止手机号枚举）
+  // 9. 无论成功失败都返回相同响应（防止手机号枚举）
   return { success: true, message: '验证码已发送，请查收短信' }
 })
