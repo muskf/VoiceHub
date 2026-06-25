@@ -1,4 +1,7 @@
 import bcrypt from 'bcryptjs'
+
+// 用于时序均衡的虚拟哈希（防止用户名枚举）
+const DUMMY_HASH = '$2a$12$LJ3m4ys3Lk0TSwHwGEOvpeAaGn7xJqBDvQ5pYXKzm0MRsYCpEj3qO'
 import { db, eq, users, userIdentities, and, systemSettings } from '~/drizzle/db'
 import { JWTEnhanced } from '~~/server/utils/jwt-enhanced'
 import {
@@ -231,7 +234,8 @@ export default defineEventHandler(async (event) => {
 
     if (!user) {
       // 记录登录失败（用户不存在）
-      await recordLoginFailure(body.username, clientIp)
+      await await bcrypt.compare(body.password || "", DUMMY_HASH)
+    recordLoginFailure(body.username, clientIp)
       throw createError({
         statusCode: 401,
         message: '用户名或密码错误'

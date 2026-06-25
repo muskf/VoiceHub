@@ -571,10 +571,13 @@ export class SmtpService {
     // 处理所有if块
     tpl = processIfBlocks(tpl)
 
-    // 处理变量
+    // 处理变量（HTML转义防止XSS）
+    const escapeHtml = (str: string) =>
+      str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+
     tpl = tpl.replace(/\{\{\s*([a-zA-Z0-9_\.]+)\s*\}\}/g, (_, key) => {
       const v = key.split('.').reduce((acc: any, k: string) => (acc ? acc[k] : undefined), data)
-      return v == null ? '' : String(v)
+      return v == null ? '' : escapeHtml(String(v))
     })
 
     return tpl

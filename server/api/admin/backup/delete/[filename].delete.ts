@@ -41,6 +41,13 @@ export default defineEventHandler(async (event) => {
     const backupDir = path.join(process.cwd(), 'backups')
     const filepath = path.join(backupDir, filename)
 
+    // 安全路径验证
+    const resolvedPath = path.resolve(filepath)
+    const resolvedBackupDir = path.resolve(backupDir)
+    if (!resolvedPath.startsWith(resolvedBackupDir + path.sep)) {
+      throw createError({ statusCode: 400, message: '无效的文件路径' })
+    }
+
     // 检查文件是否存在
     try {
       await fs.access(filepath)

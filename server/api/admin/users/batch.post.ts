@@ -143,7 +143,7 @@ export default defineEventHandler(async (event) => {
     // 如果批量插入整体失败，则全部标记为失败
     for (const userData of usersToInsertData) {
       results.failed++
-      results.errors.push({ index: userData.index, username: userData.username, name: userData.name, reason: error.message || '数据库批量写入失败' })
+      results.errors.push({ index: userData.index, username: userData.username, name: userData.name, reason: '数据库写入失败' })
     }
   }
 

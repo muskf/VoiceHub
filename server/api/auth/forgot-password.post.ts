@@ -64,11 +64,11 @@ export default defineEventHandler(async (event) => {
       }
       const maskedEmail = `${maskedName}@${domain}`
       
-      return { 
-        success: true, 
+      return {
+        success: true,
         step: 2,
-        maskedEmail,
-        message: '请输入完整的邮箱地址以验证身份' 
+        maskedEmail: '',
+        message: '请输入完整的邮箱地址以验证身份'
       }
     }
 

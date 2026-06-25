@@ -36,9 +36,31 @@ export default defineEventHandler(async (event) => {
     // 验证并解码token
     const decoded = JWTEnhanced.verify(token) as any
 
-    if (decoded.type !== 'password_reset' || !decoded.userId || !decoded.hash) {
+    if (decoded.type !== 'password_reset' || !decoded.userId || !decoded.nonce) {
       throw createError({ statusCode: 400, message: '无效的重置链接' })
     }
+
+    // 验证 nonce 与 captchaStore 中存储的令牌匹配
+    const { getStore, delStore } = await import('~~/server/utils/captchaStore')
+    const storedData = await getStore(`password_reset:${decoded.userId}`)
+    if (!storedData) {
+      throw createError({ statusCode: 400, message: '重置链接已过期，请重新获取' })
+    }
+
+    let stored: { nonce: string; userId: number; expiresAt: number }
+    try {
+      stored = JSON.parse(storedData)
+    } catch {
+      throw createError({ statusCode: 400, message: '重置链接数据异常' })
+    }
+
+    if (stored.expiresAt < Date.now() || stored.nonce.substring(0, 16) !== decoded.nonce) {
+      await delStore(`password_reset:${decoded.userId}`)
+      throw createError({ statusCode: 400, message: '重置链接已过期，请重新获取' })
+    }
+
+    // 验证通过，删除令牌（一次性使用）
+    await delStore(`password_reset:${decoded.userId}`)
 
     // 获取最新用户信息
     const userResult = await db.select().from(users).where(eq(users.id, decoded.userId)).limit(1)

@@ -345,8 +345,7 @@ export default defineEventHandler(async (event) => {
             .from(users)
           const permissionsData = await db.select().from(apiKeyPermissions)
 
-          return apiKeysData.map((key) => ({
-            ...key,
+          return apiKeysData.map((key) => ({ ...key, keyHash: '[REDACTED]',
             createdByUser: usersData.find((user) => user.id === key.createdByUserId),
             permissions: permissionsData.filter((perm) => perm.apiKeyId === key.id)
           }))
@@ -505,6 +504,7 @@ export default defineEventHandler(async (event) => {
 
     // 生成备份文件名（用于下载）
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+    const randomSuffix = Math.random().toString(36).substring(2, 10)
     let filePrefix = 'database-backup'
 
     if (tables === 'users') {

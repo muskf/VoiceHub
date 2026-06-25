@@ -187,7 +187,7 @@ export default defineEventHandler(async (event) => {
 
     throw createError({
       statusCode: 500,
-      message: `图片获取失败: ${error?.message || '未知错误'}`
+      message: '图片获取失败'
     })
   } finally {
     activeImageFetches = Math.max(0, activeImageFetches - 1)

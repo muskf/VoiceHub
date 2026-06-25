@@ -102,7 +102,6 @@ export default defineEventHandler(async (event) => {
     }
   } catch (error) {
     console.error('WebAuthn 登录验证失败:', error)
-    const message = error instanceof Error ? error.message : '验证失败'
-    throw createError({ statusCode: 400, message })
+    throw createError({ statusCode: 400, message: '验证失败' })
   }
 })

@@ -56,6 +56,8 @@ export default defineEventHandler(async (event) => {
   // 4. 检查邮箱是否已被使用（静默返回，防止邮箱枚举）
   const existingUser = await db.select({ id: users.id }).from(users).where(eq(users.email, emailRaw)).limit(1)
   if (existingUser.length > 0) {
+    // 生成虚拟验证码以均衡响应时间（防止时序侧信道）
+    randomInt(100000, 999999)
     return { success: true, message: '验证码已发送，请查收邮箱' }
   }
 

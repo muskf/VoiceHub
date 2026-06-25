@@ -53,18 +53,17 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 429, message: '该手机号今日验证码次数已达上限' })
   }
 
-  // 5. CAPTCHA 验证码校验（如果系统启用了图形验证码）
+  // 5. CAPTCHA 验证码校验（系统启用时必须提供）
   if (config?.captchaEnabled) {
     const captchaId = (body?.captchaId || '').toString()
     const captchaInput = (body?.captchaInput || '').toString()
-    if (captchaId && captchaInput) {
-      const captchaValid = await verifyAndConsumeCaptcha(captchaId, captchaInput)
-      if (!captchaValid) {
-        throw createError({ statusCode: 400, message: '验证码错误，请重试' })
-      }
+    if (!captchaId || !captchaInput) {
+      throw createError({ statusCode: 400, message: '请完成图形验证码验证' })
     }
-    // 如果启用了验证码但未提供，仍然放行（前端可能未实现）
-    // 但记录日志以便追踪
+    const captchaValid = await verifyAndConsumeCaptcha(captchaId, captchaInput)
+    if (!captchaValid) {
+      throw createError({ statusCode: 400, message: '图形验证码错误，请重试' })
+    }
   }
 
   // 6. 生成 6 位验证码（密码学安全）

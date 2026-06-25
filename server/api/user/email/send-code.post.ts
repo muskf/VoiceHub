@@ -3,6 +3,7 @@ import { users } from '~/drizzle/schema'
 import { eq } from 'drizzle-orm'
 import { SmtpService } from '~~/server/services/smtpService'
 import { getClientIP } from '~~/server/utils/ip-utils'
+import { checkRateLimit } from '~~/server/utils/rateLimiter'
 
 // 简易验证码存储（如需分布式/重启持久，建议迁移到Redis）
 const emailVerificationCodes = new Map<
@@ -71,6 +72,16 @@ export default defineEventHandler(async (event) => {
 
   // 获取客户端IP地址
   const clientIP = getClientIP(event)
+
+  // 限流：每分钟 1 次，每小时 5 次
+  const perMinLimit = checkRateLimit(`email_verify_min:${user.id}`, 1, 60 * 1000)
+  if (!perMinLimit.isAllowed) {
+    throw createError({ statusCode: 429, message: '发送验证码过于频繁，请1分钟后再试' })
+  }
+  const perHourLimit = checkRateLimit(`email_verify_hour:${user.id}`, 5, 60 * 60 * 1000)
+  if (!perHourLimit.isAllowed) {
+    throw createError({ statusCode: 429, message: '发送验证码过于频繁，请稍后再试' })
+  }
 
   // 发送邮件验证码
   await sendEmailVerificationCode(user.id, emailRaw, user.name, clientIP)

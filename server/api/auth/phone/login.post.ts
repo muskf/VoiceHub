@@ -108,6 +108,17 @@ export default defineEventHandler(async (event) => {
   // 查找用户
   let user = await db.select().from(users).where(eq(users.phone, phone)).limit(1).then(r => r[0])
 
+  if (user) {
+    // 检查用户状态（与 login.post.ts 一致）
+    if (user.status === 'withdrawn') {
+      throw createError({ statusCode: 403, message: '该账号已注销' })
+    } else if (user.status === 'graduate') {
+      throw createError({ statusCode: 403, message: '该账号已毕业，无法登录' })
+    } else if (user.status === 'banned') {
+      throw createError({ statusCode: 403, message: '该账号已被封禁' })
+    }
+  }
+
   if (!user) {
     // 自动注册
     const now = getBeijingTime()

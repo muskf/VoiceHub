@@ -13,7 +13,7 @@ const ALLOWED_MIMES = new Set([
   'image/svg+xml'
 ])
 
-const ALLOWED_EXTS = new Set(['.png', '.jpg', '.jpeg', '.gif', '.webp', '.ico', '.svg'])
+const ALLOWED_EXTS = new Set(['.png', '.jpg', '.jpeg', '.gif', '.webp', '.ico'])
 
 // Magic bytes for image type validation
 const MAGIC_BYTES: Record<string, number[][]> = {
@@ -105,7 +105,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Magic byte 校验：确保文件内容与扩展名匹配（SVG 跳过，因为是 XML 文本格式）
-  if (ext !== '.svg' && !(await validateMagicBytes(uploadedFile.filepath, ext))) {
+  if (!(await validateMagicBytes(uploadedFile.filepath, ext))) {
     await fs.unlink(uploadedFile.filepath).catch(() => {})
     throw createError({ statusCode: 400, message: '文件内容与扩展名不匹配，请上传有效的图片文件' })
   }

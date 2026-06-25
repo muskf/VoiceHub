@@ -4,6 +4,13 @@ import { eq } from 'drizzle-orm'
 
 export default defineEventHandler(async (event) => {
   const user = event.context.user
+
+  // 限流：每分钟 10 次
+  const rateLimitKey = `cardcode_validate:${user.id}`
+  const limitResult = checkRateLimit(rateLimitKey, 10, 60 * 1000)
+  if (!limitResult.isAllowed) {
+    throw createError({ statusCode: 429, message: '验证操作过于频繁' })
+  }
   if (!user) {
     throw createError({ statusCode: 401, message: '需要登录才能验证点歌券' })
   }

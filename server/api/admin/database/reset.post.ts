@@ -97,7 +97,7 @@ async function resetAutoIncrementSequences() {
       }
     } catch (error) {
       console.warn(`重置 ${table.name} 表序列失败: ${error.message}`)
-      results.push({ table: table.name, success: false, error: error.message })
+      results.push({ table: table.name, success: false, error: '序列重置失败' })
     }
   }
   return results

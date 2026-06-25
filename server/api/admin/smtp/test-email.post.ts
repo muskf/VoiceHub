@@ -105,7 +105,7 @@ export default defineEventHandler(async (event) => {
     return {
       success: false,
       message: '发送测试邮件失败',
-      detail: error instanceof Error ? error.message : String(error)
+      detail: '连接失败，请检查配置'
     }
   }
 })

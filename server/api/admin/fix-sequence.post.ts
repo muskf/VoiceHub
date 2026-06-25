@@ -87,7 +87,7 @@ async function fixTableSequence(table: string, dbTableName: string) {
     return {
       success: false,
       table: table,
-      error: error instanceof Error ? error.message : '未知错误'
+      error: '操作失败'
     }
   }
 }
@@ -171,7 +171,7 @@ export default defineEventHandler(async (event) => {
           const errorResult = {
             success: false,
             table: tableName,
-            error: error instanceof Error ? error.message : '未知错误'
+            error: '操作失败'
           }
           results.push(errorResult)
           hasError = true
@@ -207,7 +207,7 @@ export default defineEventHandler(async (event) => {
     console.error('Fix sequence error:', error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : '未知错误'
+      error: '操作失败'
     }
   }
 })

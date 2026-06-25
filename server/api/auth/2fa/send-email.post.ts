@@ -2,6 +2,7 @@ import { db, users, eq } from '~/drizzle/db'
 import { twoFactorCodes } from '~~/server/utils/twoFactorStore'
 import { SmtpService } from '~~/server/services/smtpService'
 import { getClientIP } from '~~/server/utils/ip-utils'
+import { checkRateLimit } from '~~/server/utils/rateLimiter'
 
 import { JWTEnhanced } from '~~/server/utils/jwt-enhanced'
 import { randomInt } from 'crypto'
@@ -80,6 +81,20 @@ export default defineEventHandler(async (event) => {
   })
 
   const clientIP = getClientIP(event)
+
+  // 全局 + IP 多层限流防邮件轰炸
+  const globalLimit = checkRateLimit('2fa_email_global', 30, 60 * 1000)
+  if (!globalLimit.isAllowed) {
+    throw createError({ statusCode: 429, message: '系统邮件发送量过大，请稍后再试' })
+  }
+  const ipHourLimit = checkRateLimit(`2fa_email_ip_h:${clientIP}`, 5, 60 * 60 * 1000)
+  if (!ipHourLimit.isAllowed) {
+    throw createError({ statusCode: 429, message: '操作过于频繁，请稍后再试' })
+  }
+  const ipDayLimit = checkRateLimit(`2fa_email_ip_d:${clientIP}`, 15, 24 * 60 * 60 * 1000)
+  if (!ipDayLimit.isAllowed) {
+    throw createError({ statusCode: 429, message: '今日操作次数已达上限' })
+  }
 
   // 发送邮件
   const smtp = SmtpService.getInstance()
