@@ -396,6 +396,31 @@
             :class="inputClass"
           >
         </div>
+
+        <!-- 短信发送测试 -->
+        <div class="flex items-end gap-3 pt-2 border-t border-zinc-800">
+          <div class="flex-1">
+            <label :class="labelClass">测试手机号</label>
+            <input
+              v-model="smsTestPhone"
+              type="tel"
+              maxlength="11"
+              placeholder="输入手机号发送测试短信"
+              :class="inputClass"
+            >
+          </div>
+          <button
+            class="flex-shrink-0 px-4 py-2.5 bg-amber-600/20 border border-amber-500/30 hover:bg-amber-600/30 text-amber-400 text-xs font-bold rounded-xl transition-all disabled:opacity-50"
+            :disabled="!smsTestPhone || smsTesting"
+            type="button"
+            @click="testSms"
+          >
+            {{ smsTesting ? '发送中...' : '发送测试' }}
+          </button>
+        </div>
+        <p v-if="smsTestResult" class="text-[11px] mt-1" :class="smsTestResult.success ? 'text-green-500' : 'text-rose-500'">
+          {{ smsTestResult.message }}
+        </p>
       </div>
     </div>
   </section>
@@ -428,6 +453,30 @@ const showSecrets = ref({
 })
 
 const showSmsSecret = ref(false)
+
+const smsTestPhone = ref('')
+const smsTesting = ref(false)
+const smsTestResult = ref(null)
+
+const testSms = async () => {
+  if (!smsTestPhone.value || !/^1[3-9]\d{9}$/.test(smsTestPhone.value)) {
+    smsTestResult.value = { success: false, message: '请输入有效的11位手机号' }
+    return
+  }
+  smsTesting.value = true
+  smsTestResult.value = null
+  try {
+    const res = await $fetch('/api/admin/sms/test', {
+      method: 'POST',
+      body: { phone: smsTestPhone.value }
+    })
+    smsTestResult.value = { success: true, message: res.message }
+  } catch (e) {
+    smsTestResult.value = { success: false, message: e.data?.message || '发送失败' }
+  } finally {
+    smsTesting.value = false
+  }
+}
 
 const formData = computed({
   get: () => props.modelValue,

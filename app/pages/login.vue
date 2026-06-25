@@ -187,7 +187,7 @@ onMounted(async () => {
 }
 
 .form-section {
-  padding: 40px 32px;
+  padding: 24px 28px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -197,7 +197,7 @@ onMounted(async () => {
 
 .form-header {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
 }
 
 .logo-row {

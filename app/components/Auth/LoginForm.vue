@@ -659,7 +659,7 @@ const handleWebAuthnLogin = async () => {
 <style scoped>
 .login-form {
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
   animation: fadeInUp 0.4s ease both;
 }
 
@@ -676,18 +676,18 @@ const handleWebAuthnLogin = async () => {
 
 .form-header {
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 16px;
 }
 
 .form-header h2 {
-  font-size: 28px;
+  font-size: 22px;
   font-weight: var(--font-bold);
   color: var(--text-primary);
-  margin: 0 0 8px 0;
+  margin: 0 0 4px 0;
 }
 
 .form-header p {
-  font-size: 16px;
+  font-size: 13px;
   color: var(--text-tertiary);
   margin: 0;
 }
@@ -695,17 +695,17 @@ const handleWebAuthnLogin = async () => {
 .auth-form {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 10px;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
 }
 
 .form-group label {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: var(--font-medium);
   color: var(--text-secondary);
 }
@@ -748,7 +748,7 @@ const handleWebAuthnLogin = async () => {
 
 .input-wrapper input {
   width: 100%;
-  padding: 16px 16px 16px 48px;
+  padding: 10px 12px 10px 40px;
   background: var(--input-bg);
   border: 1px solid var(--input-border);
   border-radius: var(--radius-lg);
@@ -876,12 +876,12 @@ const handleWebAuthnLogin = async () => {
 
 .submit-btn {
   width: 100%;
-  padding: 16px;
+  padding: 10px;
   background: var(--btn-primary-bg);
   color: var(--btn-primary-text);
   border: 1px solid var(--btn-primary-border);
   border-radius: var(--radius-lg);
-  font-size: 16px;
+  font-size: 14px;
   font-weight: var(--font-semibold);
   cursor: pointer;
   transition:
@@ -989,7 +989,7 @@ const handleWebAuthnLogin = async () => {
   display: flex;
   align-items: center;
   text-align: center;
-  margin: 20px 0;
+  margin: 10px 0;
   color: var(--text-quaternary);
   font-size: 12px;
 }
@@ -1007,7 +1007,7 @@ const handleWebAuthnLogin = async () => {
 
 .webauthn-btn {
   width: 100%;
-  padding: 14px;
+  padding: 8px;
   background: var(--surface-secondary);
   color: var(--text-primary);
   border: 1px solid var(--input-border);
