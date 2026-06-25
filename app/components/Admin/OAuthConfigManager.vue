@@ -65,6 +65,28 @@
         </div>
       </div>
 
+      <div class="flex items-center justify-between bg-zinc-900/50 p-4 rounded-xl border border-zinc-800/50">
+        <div>
+          <label :class="labelClass">允许手机号登录/注册</label>
+          <p class="text-[10px] text-zinc-600 mt-1">开启后，用户可通过手机短信验证码登录或自动注册（需配置阿里云短信）</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <span
+            :class="[
+              'text-[10px] font-bold',
+              formData.allowPhoneRegistration ? 'text-green-500' : 'text-zinc-500'
+            ]"
+          >
+            {{ formData.allowPhoneRegistration ? '已允许' : '未允许' }}
+          </span>
+          <input
+            v-model="formData.allowPhoneRegistration"
+            type="checkbox"
+            class="w-4 h-4 rounded border-zinc-800 bg-zinc-900 accent-green-600 cursor-pointer"
+          >
+        </div>
+      </div>
+
       <div>
         <label :class="labelClass">OAuth 重定向 URI</label>
         <p class="text-[10px] text-zinc-600 px-1 mb-2">
@@ -304,6 +326,78 @@
         </p>
       </div>
     </div>
+
+    <!-- 阿里云短信配置 -->
+    <div class="space-y-4">
+      <div class="flex items-center justify-between border-t border-zinc-800 pt-6">
+        <h4 class="text-xs font-bold text-zinc-400 uppercase tracking-widest">阿里云短信 (SMS)</h4>
+        <div class="flex items-center gap-2">
+          <span
+            :class="[
+              'text-[10px] font-bold',
+              formData.smsEnabled ? 'text-green-500' : 'text-zinc-500'
+            ]"
+          >
+            {{ formData.smsEnabled ? '已启用' : '未启用' }}
+          </span>
+          <input
+            v-model="formData.smsEnabled"
+            type="checkbox"
+            class="w-4 h-4 rounded border-zinc-800 bg-zinc-900 accent-green-600 cursor-pointer"
+          >
+        </div>
+      </div>
+
+      <div v-if="formData.smsEnabled" class="space-y-4">
+        <div>
+          <label :class="labelClass">AccessKey ID</label>
+          <input
+            v-model="formData.smsAliyunAccessKeyId"
+            type="text"
+            placeholder="阿里云 AccessKey ID"
+            :class="inputClass"
+          >
+        </div>
+        <div>
+          <label :class="labelClass">AccessKey Secret</label>
+          <div class="flex gap-2">
+            <input
+              v-model="formData.smsAliyunAccessKeySecret"
+              :type="showSmsSecret ? 'text' : 'password'"
+              placeholder="阿里云 AccessKey Secret"
+              :class="inputClass"
+            >
+            <button
+              type="button"
+              class="px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 text-xs font-bold rounded-xl transition-all"
+              @click="showSmsSecret = !showSmsSecret"
+            >
+              {{ showSmsSecret ? '隐藏' : '显示' }}
+            </button>
+          </div>
+        </div>
+        <div>
+          <label :class="labelClass">短信签名</label>
+          <p class="text-[10px] text-zinc-600 px-1 mb-2">在阿里云短信控制台申请的签名名称</p>
+          <input
+            v-model="formData.smsAliyunSignName"
+            type="text"
+            placeholder="例如：校园广播站"
+            :class="inputClass"
+          >
+        </div>
+        <div>
+          <label :class="labelClass">模板 Code</label>
+          <p class="text-[10px] text-zinc-600 px-1 mb-2">短信模板 ID，模板中需包含 <code class="bg-zinc-950 px-1 rounded">code</code> 变量</p>
+          <input
+            v-model="formData.smsAliyunTemplateCode"
+            type="text"
+            placeholder="例如：SMS_123456789"
+            :class="inputClass"
+          >
+        </div>
+      </div>
+    </div>
   </section>
 </template>
 
@@ -332,6 +426,8 @@ const showSecrets = ref({
   state: false,
   custom: false
 })
+
+const showSmsSecret = ref(false)
 
 const formData = computed({
   get: () => props.modelValue,

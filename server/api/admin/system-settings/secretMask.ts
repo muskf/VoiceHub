@@ -15,6 +15,9 @@ export const maskSystemSettingsSecrets = <T extends Record<string, any>>(setting
     customOAuthClientSecret: settings.customOAuthClientSecret
       ? SECRET_FIELD_MASK
       : settings.customOAuthClientSecret,
-    turnstileSecretKey: settings.turnstileSecretKey ? SECRET_FIELD_MASK : settings.turnstileSecretKey
+    turnstileSecretKey: settings.turnstileSecretKey ? SECRET_FIELD_MASK : settings.turnstileSecretKey,
+    smsAliyunAccessKeySecret: settings.smsAliyunAccessKeySecret
+      ? SECRET_FIELD_MASK
+      : settings.smsAliyunAccessKeySecret
   }
 }

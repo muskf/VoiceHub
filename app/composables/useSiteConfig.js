@@ -93,6 +93,8 @@ export const useSiteConfig = () => {
   const brandLogoPngUrl = computed(() => siteConfig.value.brandLogoPngUrl || '')
   const brandLogo144Url = computed(() => siteConfig.value.brandLogo144Url || '')
   const brandLogoSvgUrl = computed(() => siteConfig.value.brandLogoSvgUrl || '')
+  const smsEnabled = computed(() => siteConfig.value.smsEnabled === true)
+  const allowPhoneRegistration = computed(() => siteConfig.value.allowPhoneRegistration === true)
   const description = computed(
     () => siteConfig.value.siteDescription || '校园广播站点歌系统 - 让你的声音被听见'
   )
@@ -170,6 +172,8 @@ export const useSiteConfig = () => {
     brandLogoPngUrl,
     brandLogo144Url,
     brandLogoSvgUrl,
+    smsEnabled,
+    allowPhoneRegistration,
     description,
     guidelines,
     icp,

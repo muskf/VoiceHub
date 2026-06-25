@@ -316,9 +316,11 @@
 
     <div class="form-footer">
       <p class="help-text">不同VoiceHub平台的账号不互通</p>
-      <p v-if="!isBindMode && allowEmailRegistration" class="register-link">
-        没有账号？<NuxtLink to="/register">邮箱注册</NuxtLink>
-      </p>
+      <div v-if="!isBindMode" class="footer-links">
+        <NuxtLink v-if="allowEmailRegistration" to="/register">邮箱注册</NuxtLink>
+        <span v-if="allowEmailRegistration && allowPhoneRegistration" class="link-sep">·</span>
+        <NuxtLink v-if="allowPhoneRegistration" to="/phone-login">手机号登录</NuxtLink>
+      </div>
     </div>
 
     <AuthTwoFactorVerify
@@ -346,7 +348,7 @@ import CustomSelect from '~/components/UI/Common/CustomSelect.vue'
 import CaptchaInput from './CaptchaInput.vue'
 import TurnstileWidget from './TurnstileWidget.vue'
 
-const { allowOAuthRegistration, allowEmailRegistration, fetchSiteConfig, smtpEnabled, captchaEnabled, captchaProvider } = useSiteConfig()
+const { allowOAuthRegistration, allowEmailRegistration, allowPhoneRegistration, fetchSiteConfig, smtpEnabled, captchaEnabled, captchaProvider } = useSiteConfig()
 
 const route = useRoute()
 const isBindMode = computed(() => route.query.action === 'bind')
@@ -945,6 +947,29 @@ const handleWebAuthnLogin = async () => {
 
 .register-link a:hover {
   text-decoration: underline;
+}
+
+.footer-links {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.footer-links a {
+  color: var(--accent-primary, #3b82f6);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.footer-links a:hover {
+  text-decoration: underline;
+}
+
+.link-sep {
+  color: var(--text-quaternary);
 }
 
 .help-text code {

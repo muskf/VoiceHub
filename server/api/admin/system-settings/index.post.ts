@@ -90,6 +90,17 @@ export default defineEventHandler(async (event) => {
       updateData.brandLogoSvgUrl = body.brandLogoSvgUrl
     }
 
+    // SMS 配置
+    if (body.smsEnabled !== undefined) updateData.smsEnabled = !!body.smsEnabled
+    if (body.smsProvider !== undefined) updateData.smsProvider = body.smsProvider
+    if (body.smsAliyunAccessKeyId !== undefined) updateData.smsAliyunAccessKeyId = body.smsAliyunAccessKeyId
+    if (body.smsAliyunAccessKeySecret !== undefined && body.smsAliyunAccessKeySecret !== '••••••••••••••••') {
+      updateData.smsAliyunAccessKeySecret = body.smsAliyunAccessKeySecret
+    }
+    if (body.smsAliyunSignName !== undefined) updateData.smsAliyunSignName = body.smsAliyunSignName
+    if (body.smsAliyunTemplateCode !== undefined) updateData.smsAliyunTemplateCode = body.smsAliyunTemplateCode
+    if (body.allowPhoneRegistration !== undefined) updateData.allowPhoneRegistration = !!body.allowPhoneRegistration
+
     if (body.siteDescription !== undefined) {
       updateData.siteDescription = body.siteDescription
     }

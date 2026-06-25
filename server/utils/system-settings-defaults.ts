@@ -86,7 +86,12 @@ export const PUBLIC_SETTINGS_FIELDS = [
   'turnstileSiteKey',
   'brandLogoPngUrl',
   'brandLogo144Url',
-  'brandLogoSvgUrl'
+  'brandLogoSvgUrl',
+  'smsEnabled',
+  'smsProvider',
+  'smsAliyunSignName',
+  'smsAliyunTemplateCode',
+  'allowPhoneRegistration'
 ]
 
 export const filterPublicSettings = (data: any) => {
