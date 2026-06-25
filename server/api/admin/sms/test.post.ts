@@ -1,7 +1,6 @@
 import { db } from '~/drizzle/db'
 import { systemSettings } from '~/drizzle/schema'
-import { sendAliyunSms } from '~~/server/services/smsService'
-import { randomInt } from 'node:crypto'
+import { sendPnvsSmsCode } from '~~/server/services/smsService'
 import { checkRateLimit } from '~~/server/utils/rateLimiter'
 import { getClientIP } from '~~/server/utils/ip-utils'
 
@@ -14,18 +13,15 @@ export default defineEventHandler(async (event) => {
   const clientIP = getClientIP(event)
   const limit = checkRateLimit(`sms_test:${user.id}`, 3, 60 * 60 * 1000)
   if (!limit.isAllowed) {
-    throw createError({ statusCode: 429, message: '测试过于频繁，请稍后再试' })
+    throw createError({ statusCode: 429, message: '测试过于频繁' })
   }
 
   const config = await db.query.systemSettings.findFirst()
   if (!config?.smsEnabled) {
-    throw createError({ statusCode: 400, message: '短信服务未启用，请先在配置中开启' })
+    throw createError({ statusCode: 400, message: '短信服务未启用' })
   }
   if (!config.smsAliyunAccessKeyId || !config.smsAliyunAccessKeySecret) {
     throw createError({ statusCode: 400, message: '阿里云 AccessKey 未配置' })
-  }
-  if (!config.smsAliyunSignName || !config.smsAliyunTemplateCode) {
-    throw createError({ statusCode: 400, message: '短信签名或模板 Code 未配置' })
   }
 
   const body = await readBody(event)
@@ -35,20 +31,16 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: '请输入有效的手机号码' })
   }
 
-  const code = randomInt(100000, 999999).toString()
+  console.log(`[SMS Test] 管理员 ${user.username} 测试 PNVS 短信发送至 ${phone}`)
 
-  console.log(`[SMS Test] 管理员 ${user.username} 测试短信发送至 ${phone}`)
-
-  const sent = await sendAliyunSms(phone, { code }, {
+  const result = await sendPnvsSmsCode(phone, {
     accessKeyId: config.smsAliyunAccessKeyId,
-    accessKeySecret: config.smsAliyunAccessKeySecret,
-    signName: config.smsAliyunSignName,
-    templateCode: config.smsAliyunTemplateCode
+    accessKeySecret: config.smsAliyunAccessKeySecret
   })
 
-  if (sent) {
-    return { success: true, message: `测试短信已发送至 ${phone}，验证码: ${code}` }
+  if (result.success) {
+    return { success: true, message: `测试短信已发送至 ${phone}` }
   } else {
-    throw createError({ statusCode: 500, message: '短信发送失败，请检查阿里云短信控制台配置' })
+    throw createError({ statusCode: 500, message: `短信发送失败: ${result.message}` })
   }
 })
