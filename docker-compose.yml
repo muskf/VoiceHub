@@ -6,10 +6,12 @@ services:
     ports:
       - '${VOICEHUB_PORT:-3000}:3000'
     environment:
-      - DATABASE_URL=postgresql://user:password@postgres:5432/voicehub
-      - JWT_SECRET=your-jwt-secret-here
+      - DATABASE_URL=${DATABASE_URL:-postgresql://user:password@postgres:5432/voicehub}
+      - JWT_SECRET=${JWT_SECRET:-your-jwt-secret-here}
       - NODE_ENV=production
       - SKIP_BUILD=true
+    volumes:
+      - uploads_data:/app/uploads
     depends_on:
       postgres:
         condition: service_healthy
@@ -20,13 +22,13 @@ services:
       context: .
       dockerfile: Dockerfile-postgres
     environment:
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=voicehub
+      - POSTGRES_USER=${POSTGRES_USER:-user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password}
+      - POSTGRES_DB=${POSTGRES_DB:-voicehub}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U user -d voicehub']
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-user} -d ${POSTGRES_DB:-voicehub}']
       interval: 5s
       timeout: 5s
       retries: 5
@@ -34,3 +36,4 @@ services:
 
 volumes:
   postgres_data:
+  uploads_data:
