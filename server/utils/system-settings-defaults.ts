@@ -91,7 +91,8 @@ export const PUBLIC_SETTINGS_FIELDS = [
   'smsProvider',
   'smsAliyunSignName',
   'smsAliyunTemplateCode',
-  'allowPhoneRegistration'
+  'allowPhoneRegistration',
+  'dailyVoteLimit'
 ]
 
 export const filterPublicSettings = (data: any) => {

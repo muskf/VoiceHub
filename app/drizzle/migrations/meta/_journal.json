@@ -232,6 +232,13 @@
       "when": 1782259200000,
       "tag": "20260624000100_add_phone_sms",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1782259300000,
+      "tag": "20260624000200_add_daily_vote_limit",
+      "breakpoints": true
     }
   ]
 }

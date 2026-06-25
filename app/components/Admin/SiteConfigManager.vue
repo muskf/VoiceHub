@@ -230,6 +230,24 @@
             >
           </div>
 
+          <!-- 每日投票限制 -->
+          <div class="flex items-center justify-between p-3 bg-zinc-950/50 border border-zinc-800 rounded-xl">
+            <div>
+              <p class="text-xs font-bold text-zinc-200">每日投票上限</p>
+              <p class="text-[10px] text-zinc-500 mt-0.5">每个用户每天最多可投票数（不能投同一首歌）</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <input
+                v-model.number="formData.dailyVoteLimit"
+                type="number"
+                min="1"
+                max="100"
+                class="w-16 bg-zinc-900 border border-zinc-800 rounded-lg px-2 py-1.5 text-xs text-center text-zinc-200 focus:outline-none focus:border-blue-500/30"
+              >
+              <span class="text-[10px] text-zinc-500">票/天</span>
+            </div>
+          </div>
+
           <div
             class="flex items-center justify-between p-3 bg-zinc-950/50 border border-zinc-800 rounded-xl"
           >
@@ -635,6 +653,7 @@ const formData = ref({
   showBeianIcon: false,
   enableCollaborativeSubmission: true,
   enableSubmissionRemarks: false,
+  dailyVoteLimit: 3,
   enableReplayRequests: false,
   enableSubmissionLimit: false,
   // 点歌券点歌设置
@@ -754,6 +773,7 @@ const loadConfig = async () => {
       showBeianIcon: !!data.showBeianIcon,
       enableCollaborativeSubmission: data.enableCollaborativeSubmission !== false,
       enableSubmissionRemarks: !!data.enableSubmissionRemarks,
+      dailyVoteLimit: data.dailyVoteLimit ?? 3,
       enableReplayRequests: !!data.enableReplayRequests,
       enableSubmissionLimit: !!data.enableSubmissionLimit,
       // 点歌券点歌设置

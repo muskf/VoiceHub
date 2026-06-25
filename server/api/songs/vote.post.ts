@@ -1,6 +1,6 @@
 import { db } from '~/drizzle/db'
-import { schedules, semesters, songs, votes } from '~/drizzle/schema'
-import { and, count, eq } from 'drizzle-orm'
+import { schedules, semesters, songs, votes, systemSettings } from '~/drizzle/schema'
+import { and, count, eq, gte } from 'drizzle-orm'
 import { createSongVotedNotification } from '../../services/notificationService'
 import {
   isSongProtected,
@@ -42,6 +42,32 @@ export default defineEventHandler(async (event) => {
   }
 
   const isUnvote = body.unvote === true
+
+  // 每日票数限制（仅投票时检查，取消投票不检查）
+  if (!isUnvote) {
+    const config = await db.query.systemSettings.findFirst()
+    const dailyLimit = config?.dailyVoteLimit || 3
+
+    // 查询用户今日已投票数
+    const todayStart = new Date()
+    todayStart.setHours(0, 0, 0, 0)
+
+    const todayVoteCount = await db
+      .select({ count: count() })
+      .from(votes)
+      .where(and(
+        eq(votes.userId, user.id),
+        gte(votes.createdAt, todayStart)
+      ))
+      .then(r => r[0]?.count || 0)
+
+    if (todayVoteCount >= dailyLimit) {
+      throw createError({
+        statusCode: 429,
+        message: `今日投票次数已用完（每日最多 ${dailyLimit} 票），请明天再试`
+      })
+    }
+  }
 
   try {
     // 检查歌曲是否存在

@@ -95,6 +95,7 @@ export const useSiteConfig = () => {
   const brandLogoSvgUrl = computed(() => siteConfig.value.brandLogoSvgUrl || '')
   const smsEnabled = computed(() => siteConfig.value.smsEnabled === true)
   const allowPhoneRegistration = computed(() => siteConfig.value.allowPhoneRegistration === true)
+  const dailyVoteLimit = computed(() => siteConfig.value.dailyVoteLimit || 3)
   const description = computed(
     () => siteConfig.value.siteDescription || '校园广播站点歌系统 - 让你的声音被听见'
   )
@@ -174,6 +175,7 @@ export const useSiteConfig = () => {
     brandLogoSvgUrl,
     smsEnabled,
     allowPhoneRegistration,
+    dailyVoteLimit,
     description,
     guidelines,
     icp,

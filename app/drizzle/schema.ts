@@ -174,6 +174,7 @@ export const systemSettings = pgTable('SystemSettings', {
   smsAliyunSignName: text('smsAliyunSignName'),
   smsAliyunTemplateCode: text('smsAliyunTemplateCode'),
   allowPhoneRegistration: boolean('allowPhoneRegistration').default(false).notNull(),
+  dailyVoteLimit: integer('dailyVoteLimit').default(3).notNull(),
   enableRequestTimeLimitation: boolean('enableRequestTimeLimitation').default(false).notNull(),
   forceBlockAllRequests: boolean().default(false).notNull(),
   enableReplayRequests: boolean('enableReplayRequests').default(false).notNull(),

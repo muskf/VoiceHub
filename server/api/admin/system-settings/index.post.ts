@@ -100,6 +100,13 @@ export default defineEventHandler(async (event) => {
     if (body.smsAliyunSignName !== undefined) updateData.smsAliyunSignName = body.smsAliyunSignName
     if (body.smsAliyunTemplateCode !== undefined) updateData.smsAliyunTemplateCode = body.smsAliyunTemplateCode
     if (body.allowPhoneRegistration !== undefined) updateData.allowPhoneRegistration = !!body.allowPhoneRegistration
+    if (body.dailyVoteLimit !== undefined) {
+      const limit = parseInt(body.dailyVoteLimit)
+      if (isNaN(limit) || limit < 1 || limit > 100) {
+        throw createError({ statusCode: 400, message: '每日票数限制必须在 1-100 之间' })
+      }
+      updateData.dailyVoteLimit = limit
+    }
 
     if (body.siteDescription !== undefined) {
       updateData.siteDescription = body.siteDescription

@@ -11,7 +11,7 @@ import {
   users,
   votes
 } from '~/drizzle/schema'
-import { and, count, desc, eq, inArray } from 'drizzle-orm'
+import { and, count, desc, eq, gte, inArray } from 'drizzle-orm'
 import { cacheService } from '~~/server/services/cacheService'
 import { executeRedisCommand, isRedisReady } from '../../utils/redis'
 import { formatDateTime } from '~/utils/timeUtils'
@@ -463,6 +463,24 @@ export default defineEventHandler(async (event) => {
     // 如果需要隐藏学生信息且用户不是管理员，则对排期数据进行脱敏
     if (shouldHideStudentInfo && !isAdmin && resultToReturn) {
       maskPublicScheduleData(resultToReturn)
+    }
+
+    // 添加用户今日剩余票数信息
+    if (user && resultToReturn) {
+      const config = await db.query.systemSettings.findFirst()
+      const dailyLimit = config?.dailyVoteLimit || 3
+      const todayStart = new Date()
+      todayStart.setHours(0, 0, 0, 0)
+      const todayVotes = await db
+        .select({ count: count() })
+        .from(votes)
+        .where(and(eq(votes.userId, user.id), gte(votes.createdAt, todayStart)))
+      const usedVotes = todayVotes[0]?.count || 0
+      resultToReturn._userVoteInfo = {
+        dailyLimit,
+        usedToday: usedVotes,
+        remaining: Math.max(0, dailyLimit - usedVotes)
+      }
     }
 
     return resultToReturn
