@@ -1183,6 +1183,40 @@
                     </div>
                   </div>
 
+                  <!-- 手机号绑定 -->
+                  <div
+                    class="p-4 bg-zinc-950/50 border border-zinc-800/50 rounded-2xl flex items-center justify-between"
+                  >
+                    <div class="space-y-1 overflow-hidden pr-2">
+                      <div class="text-[10px] font-black text-zinc-600 uppercase tracking-tighter">
+                        手机号绑定
+                      </div>
+                      <div
+                        class="text-sm font-bold truncate"
+                        :class="
+                          selectedUserDetail.phone ? (selectedUserDetail.phoneVerified ? 'text-emerald-500' : 'text-amber-500') : 'text-zinc-500'
+                        "
+                        :title="selectedUserDetail.phone ? `${selectedUserDetail.phone} ${selectedUserDetail.phoneVerified ? '(已验证)' : '(未验证)'}` : '未绑定'"
+                      >
+                        {{
+                          selectedUserDetail.phone
+                            ? `${selectedUserDetail.phone} ${selectedUserDetail.phoneVerified ? '(已验证)' : '(未验证)'}`
+                            : '未绑定'
+                        }}
+                      </div>
+                    </div>
+                    <div
+                      :class="[
+                        'w-8 h-8 rounded-xl flex items-center justify-center shrink-0',
+                        selectedUserDetail.phone
+                          ? (selectedUserDetail.phoneVerified ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500')
+                          : 'bg-zinc-800 text-zinc-600'
+                      ]"
+                    >
+                      <Smartphone :size="16" />
+                    </div>
+                  </div>
+
                   <!-- OAuth 账号绑定 -->
                   <div
                     class="p-4 bg-zinc-950/50 border border-zinc-800/50 rounded-2xl flex items-center justify-between"
@@ -1425,6 +1459,7 @@ import {
   MoreVertical,
   LogOut,
   Mail,
+  Smartphone,
   Plus,
   ArrowLeft,
   Filter,

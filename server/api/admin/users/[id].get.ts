@@ -39,6 +39,8 @@ export default defineEventHandler(async (event) => {
       meowBoundAt: true,
       email: true,
       emailVerified: true,
+      phone: true,
+      phoneVerified: true,
       createdAt: true,
       updatedAt: true
     },
