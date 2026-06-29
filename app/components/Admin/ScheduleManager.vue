@@ -304,7 +304,8 @@
                 :key="song.id"
                 :class="[
                   'draggable-song relative group rounded-xl p-3 transition-all select-none',
-                  song.cardCodeId ? 'bg-amber-500/5 border border-amber-500/30' : 'bg-zinc-900 border border-zinc-800/50 hover:border-zinc-700'
+                  song.cardCodeId ? 'bg-amber-500/5 border border-amber-500/30' : 'bg-zinc-900 border border-zinc-800/50 hover:border-zinc-700',
+                  (song.scheduled || scheduledSongIds.has(song.id)) ? 'opacity-60' : ''
                 ]"
                 draggable="true"
                 @dragend="dragEnd"
@@ -346,6 +347,12 @@
                           <span class="truncate">{{ song.title }}</span>
                         </span>
                         <span v-else class="truncate">{{ song.title }}</span>
+
+                        <!-- 已排期标签 -->
+                        <span
+                          v-if="(song.scheduled || scheduledSongIds.has(song.id)) && searchQuery.trim()"
+                          class="flex-shrink-0 px-1.5 py-[2px] bg-green-500/10 text-green-400 rounded text-[9px] border border-green-500/20 font-normal leading-none"
+                        >已排期</span>
                         
                         <!-- 歌单来源标签 -->
                         <span 
@@ -1421,8 +1428,13 @@ const allUnscheduledSongs = computed(() => {
   const sourceData = activeTab.value === 'replay' ? replayRequests.value : songs.value
   if (!sourceData) return []
 
+  const hasSearch = searchQuery.value.trim().length > 0
+
   let unscheduledSongs = sourceData.filter((song) => {
-    // 检查是否已在当前显示的排期列表中（当前日期、当前时段）
+    // 有搜索时，显示所有匹配歌曲（包括已排期的）
+    if (hasSearch) return true
+
+    // 无搜索时，检查是否已在当前显示的排期列表中
     const isScheduledInCurrentView = localScheduledSongs.value.some(
       (s) => (s.song && s.song.id === song.id) || s.songId === song.id
     )
@@ -1430,24 +1442,22 @@ const allUnscheduledSongs = computed(() => {
     if (isScheduledInCurrentView) return false
 
     if (activeTab.value === 'replay' || activeTab.value === 'all') {
-      // 重播申请和所有歌曲模式不需要检查 played 状态，只要当前视图没排上就行
       return true
     } else {
-      // 普通投稿需未播放，且未在任何日期的排期中
       const isAlreadyScheduled = song.scheduled || scheduledSongIds.value.has(song.id)
       return !song.played && !isAlreadyScheduled
     }
   })
 
-  // 搜索过滤
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
+  // 模糊搜索：将查询拆分为多个词，匹配任意一个即可
+  if (hasSearch) {
+    const words = searchQuery.value.toLowerCase().split(/\s+/).filter(Boolean)
     unscheduledSongs = unscheduledSongs.filter((song) => {
       const title = (song.title || '').toLowerCase()
       const artist = (song.artist || '').toLowerCase()
       const requester = (song.requester || '').toLowerCase()
-
-      return title.includes(query) || artist.includes(query) || requester.includes(query)
+      const searchable = `${title} ${artist} ${requester}`
+      return words.some(word => searchable.includes(word))
     })
   }
 
