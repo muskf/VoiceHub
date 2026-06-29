@@ -1873,6 +1873,11 @@ const registerBeforeNavigate = inject('registerBeforeNavigate', null)
 let suppressSelectedDateLoad = false
 
 onMounted(async () => {
+  // 确保用户数据已加载（dashboard 页面不会调用 initAuth）
+  if (!_auth.user.value) {
+    await _auth.initAuth()
+  }
+
   window.addEventListener('beforeunload', handleBeforeUnload)
 
   if (registerBeforeNavigate) {
