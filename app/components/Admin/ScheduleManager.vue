@@ -1420,8 +1420,8 @@ const pageSize = ref(10)
 // 服务
 let songsService = null
 let adminService = null
-const authUserState = useState('user', () => null)
-const isSuperAdmin = computed(() => authUserState.value?.role === 'SUPER_ADMIN')
+const _auth = useAuth()
+const isSuperAdmin = computed(() => _auth.user.value?.role === 'SUPER_ADMIN')
 let auth = null
 let semesterService = null
 
