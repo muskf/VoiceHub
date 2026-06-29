@@ -1449,15 +1449,42 @@ const allUnscheduledSongs = computed(() => {
     }
   })
 
-  // 模糊搜索：将查询拆分为多个词，匹配任意一个即可
+  // 模糊搜索：多词匹配 + 中文异形字归一化
   if (hasSearch) {
+    // 常见中文异形字/近义词映射（归一化到同一组）
+    const charVariants: Record<string, string> = {
+      '予': '与', '与': '与',
+      '的': '的', '地': '的', '得': '的',
+      '做': '作', '作': '作',
+      '像': '象', '象': '象',
+      '那': '哪', '哪': '哪',
+      '在': '再', '再': '再',
+      '座': '坐', '坐': '坐',
+      '带': '代', '代': '代',
+      '已': '以', '以': '以',
+      '他': '她', '她': '她', '它': '她',
+      '阿': '啊', '啊': '啊',
+      '吧': '罢', '罢': '罢',
+      '没': '沒', '沒': '没',
+      '着': '著', '著': '着',
+      '里': '裏', '裏': '里', '裡': '里',
+      '只': '隻', '隻': '只',
+      '发': '發', '發': '发',
+      '后': '後', '後': '后',
+      '干': '幹', '幹': '干',
+      '于': '於', '於': '于',
+      '才': '纔', '纔': '才',
+    }
+    const normalize = (text: string): string => {
+      return text.split('').map(c => charVariants[c] || c).join('')
+    }
+
     const words = searchQuery.value.toLowerCase().split(/\s+/).filter(Boolean)
     unscheduledSongs = unscheduledSongs.filter((song) => {
-      const title = (song.title || '').toLowerCase()
-      const artist = (song.artist || '').toLowerCase()
-      const requester = (song.requester || '').toLowerCase()
-      const searchable = `${title} ${artist} ${requester}`
-      return words.some(word => searchable.includes(word))
+      const raw = `${song.title || ''} ${song.artist || ''} ${song.requester || ''}`.toLowerCase()
+      const searchable = normalize(raw)
+      // 每个搜索词（归一化后）都必须在文本中找到
+      return words.every(word => searchable.includes(normalize(word)))
     })
   }
 
