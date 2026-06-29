@@ -1121,7 +1121,7 @@ const loading = ref(false)
 const songSortOption = ref('votes-desc')
 const hasChanges = ref(false)
 const searchQuery = ref('')
-const selectedSongIds = ref<Set<number>>(new Set())
+const selectedSongIds = ref(new Set())
 const isSuperAdmin = computed(() => authUser.value?.role === 'SUPER_ADMIN')
 const selectedGrade = ref('全部')
 const activeTab = ref('normal')
@@ -1496,8 +1496,7 @@ const allUnscheduledSongs = computed(() => {
 
   // 模糊搜索：多词匹配 + 中文异形字归一化
   if (hasSearch) {
-    // 常见中文异形字/近义词映射（归一化到同一组）
-    const charVariants: Record<string, string> = {
+    const charVariants = {
       '予': '与', '与': '与',
       '的': '的', '地': '的', '得': '的',
       '做': '作', '作': '作',
@@ -1520,7 +1519,7 @@ const allUnscheduledSongs = computed(() => {
       '于': '於', '於': '于',
       '才': '纔', '纔': '才',
     }
-    const normalize = (text: string): string => {
+    const normalize = (text) => {
       // 1. 去除所有标点符号（中英文标点、特殊符号）
       // 2. 异形字归一化
       return text
@@ -1567,7 +1566,7 @@ const allUnscheduledSongs = computed(() => {
 
         return { song, score }
       })
-      .filter(Boolean) as { song: any; score: number }[]
+      .filter(Boolean)
 
     // 按分数降序排列
     scored.sort((a, b) => b.score - a.score)
@@ -2540,7 +2539,7 @@ const handleReturnToDraggable = async (event) => {
 
 // ===== 歌曲多选 + 批量标记已播放（超级管理员） =====
 
-const toggleSongSelection = (songId: number) => {
+const toggleSongSelection = (songId) => {
   const newSet = new Set(selectedSongIds.value)
   if (newSet.has(songId)) {
     newSet.delete(songId)
@@ -2550,7 +2549,7 @@ const toggleSongSelection = (songId: number) => {
   selectedSongIds.value = newSet
 }
 
-const isSongSelected = (songId: number) => selectedSongIds.value.has(songId)
+const isSongSelected = (songId) => selectedSongIds.value.has(songId)
 
 const toggleSelectAllVisible = () => {
   const visibleIds = filteredUnscheduledSongs.value.map(s => s.id)
