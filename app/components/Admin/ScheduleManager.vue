@@ -1122,7 +1122,7 @@ const songSortOption = ref('votes-desc')
 const hasChanges = ref(false)
 const searchQuery = ref('')
 const selectedSongIds = ref<Set<number>>(new Set())
-const isSuperAdmin = computed(() => auth.user?.value?.role === 'SUPER_ADMIN')
+const isSuperAdmin = computed(() => authUser.value?.role === 'SUPER_ADMIN')
 const selectedGrade = ref('全部')
 const activeTab = ref('normal')
 const mobileTab = ref('pending')
@@ -1421,6 +1421,7 @@ const pageSize = ref(10)
 // 服务
 let songsService = null
 let adminService = null
+const { user: authUser } = useAuth()
 let auth = null
 let semesterService = null
 
