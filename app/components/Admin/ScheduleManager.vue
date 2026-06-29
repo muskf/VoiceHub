@@ -1476,7 +1476,11 @@ const allUnscheduledSongs = computed(() => {
       '才': '纔', '纔': '才',
     }
     const normalize = (text: string): string => {
-      return text.split('').map(c => charVariants[c] || c).join('')
+      // 1. 去除所有标点符号（中英文标点、特殊符号）
+      // 2. 异形字归一化
+      return text
+        .replace(/[\s.,;:!?·。，；：！？、""''「」『』【】《》（）()\[\]{}<>\-_+=~`@#$%^&*|/\\'"]/g, '')
+        .split('').map(c => charVariants[c] || c).join('')
     }
 
     const words = searchQuery.value.toLowerCase().split(/\s+/).filter(Boolean)
