@@ -1484,12 +1484,49 @@ const allUnscheduledSongs = computed(() => {
     }
 
     const words = searchQuery.value.toLowerCase().split(/\s+/).filter(Boolean)
-    unscheduledSongs = unscheduledSongs.filter((song) => {
-      const raw = `${song.title || ''} ${song.artist || ''} ${song.requester || ''}`.toLowerCase()
-      const searchable = normalize(raw)
-      // 每个搜索词（归一化后）都必须在文本中找到
-      return words.every(word => searchable.includes(normalize(word)))
-    })
+    const normalizedQuery = normalize(searchQuery.value.toLowerCase())
+
+    // 过滤 + 打分
+    const scored = unscheduledSongs
+      .map((song) => {
+        const title = (song.title || '').toLowerCase()
+        const artist = (song.artist || '').toLowerCase()
+        const requester = (song.requester || '').toLowerCase()
+        const nTitle = normalize(title)
+        const nArtist = normalize(artist)
+        const nAll = `${nTitle} ${nArtist} ${normalize(requester)}`
+
+        // 必须每个词都匹配
+        const allMatch = words.every(w => nAll.includes(normalize(w)))
+        if (!allMatch) return null
+
+        let score = 0
+
+        // 1. 精确短语匹配（归一化后完整匹配）得最高分
+        if (nTitle.includes(normalizedQuery)) score += 1000
+        if (nArtist.includes(normalizedQuery)) score += 500
+
+        // 2. 标题中包含搜索词（每词 +100）
+        const nWords = words.map(w => normalize(w))
+        const titleMatches = nWords.filter(w => nTitle.includes(w)).length
+        score += titleMatches * 100
+
+        // 3. 艺术家匹配（每词 +30）
+        const artistMatches = nWords.filter(w => nArtist.includes(w)).length
+        score += artistMatches * 30
+
+        // 4. 标题越短越相关（减少噪声）
+        if (titleMatches > 0) {
+          score += Math.max(0, 50 - title.length)
+        }
+
+        return { song, score }
+      })
+      .filter(Boolean) as { song: any; score: number }[]
+
+    // 按分数降序排列
+    scored.sort((a, b) => b.score - a.score)
+    unscheduledSongs = scored.map(s => s.song)
   }
 
   // 年级过滤 (针对普通投稿和所有歌曲)
