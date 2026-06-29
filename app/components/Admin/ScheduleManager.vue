@@ -316,6 +316,21 @@
               >
                 <!-- 歌曲卡片内容 -->
                 <div class="flex items-center gap-3">
+                  <!-- 超级管理员选择框 -->
+                  <div
+                    v-if="isSuperAdmin"
+                    class="flex-shrink-0 cursor-pointer"
+                    @click.stop="toggleSongSelection(song.id)"
+                  >
+                    <div
+                      class="w-4 h-4 rounded border transition-all flex items-center justify-center"
+                      :class="isSongSelected(song.id) ? 'bg-emerald-500 border-emerald-500' : 'border-zinc-700 hover:border-zinc-500'"
+                    >
+                      <svg v-if="isSongSelected(song.id)" class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                  </div>
                   <!-- 封面图片 -->
                   <div
                     class="relative w-12 h-12 rounded-lg overflow-hidden bg-zinc-800 flex-shrink-0 border border-zinc-700/50 cursor-pointer hover:opacity-80 transition-opacity"
@@ -538,6 +553,32 @@
                     >全部已播放</span
                   >
                 </button>
+                <!-- 超级管理员：全选 + 批量标记已播放 -->
+                <template v-if="isSuperAdmin">
+                  <button
+                    class="p-2 bg-zinc-950 border border-zinc-800 hover:bg-zinc-800 rounded-xl transition-all group relative"
+                    :class="allVisibleSelected ? 'text-emerald-500 border-emerald-500/30' : 'text-zinc-500 hover:text-blue-400'"
+                    @click="toggleSelectAllVisible"
+                  >
+                    <CheckSquare class="w-3.5 h-3.5" />
+                    <span
+                      class="absolute -top-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-zinc-800 text-[9px] text-zinc-300 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap border border-zinc-700"
+                      >{{ allVisibleSelected ? '取消全选' : '全选当前列表' }}</span
+                    >
+                  </button>
+                  <button
+                    v-if="selectedSongIds.size > 0"
+                    class="p-2 bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 text-emerald-500 rounded-xl transition-all group relative"
+                    @click="batchMarkSelectedPlayed"
+                  >
+                    <CheckCircle2 class="w-3.5 h-3.5" />
+                    <span class="absolute -top-1 left-1/2 -translate-x-1/2 px-1 py-0.5 bg-emerald-500 text-[8px] text-white rounded-full font-bold">{{ selectedSongIds.size }}</span>
+                    <span
+                      class="absolute -top-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-zinc-800 text-[9px] text-zinc-300 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap border border-zinc-700"
+                      >批量标记已播放</span
+                    >
+                  </button>
+                </template>
                 <button
                   class="p-2 bg-zinc-950 border border-zinc-800 hover:bg-zinc-800 text-zinc-500 hover:text-purple-400 rounded-xl transition-all group relative"
                   @click="openMoveDateDialog"
@@ -981,6 +1022,7 @@ import {
   Save,
   Send,
   CheckCircle2,
+  CheckSquare,
   Download,
   FileBadge,
   PlaySquare,
@@ -1079,6 +1121,8 @@ const loading = ref(false)
 const songSortOption = ref('votes-desc')
 const hasChanges = ref(false)
 const searchQuery = ref('')
+const selectedSongIds = ref<Set<number>>(new Set())
+const isSuperAdmin = computed(() => auth.user?.value?.role === 'SUPER_ADMIN')
 const selectedGrade = ref('全部')
 const activeTab = ref('normal')
 const mobileTab = ref('pending')
@@ -2491,6 +2535,79 @@ const handleReturnToDraggable = async (event) => {
   }
 
   isDraggableOver.value = false
+}
+
+// ===== 歌曲多选 + 批量标记已播放（超级管理员） =====
+
+const toggleSongSelection = (songId: number) => {
+  const newSet = new Set(selectedSongIds.value)
+  if (newSet.has(songId)) {
+    newSet.delete(songId)
+  } else {
+    newSet.add(songId)
+  }
+  selectedSongIds.value = newSet
+}
+
+const isSongSelected = (songId: number) => selectedSongIds.value.has(songId)
+
+const toggleSelectAllVisible = () => {
+  const visibleIds = filteredUnscheduledSongs.value.map(s => s.id)
+  const allSelected = visibleIds.every(id => selectedSongIds.value.has(id))
+  if (allSelected) {
+    // 取消全选
+    const newSet = new Set(selectedSongIds.value)
+    visibleIds.forEach(id => newSet.delete(id))
+    selectedSongIds.value = newSet
+  } else {
+    // 全选
+    const newSet = new Set(selectedSongIds.value)
+    visibleIds.forEach(id => newSet.add(id))
+    selectedSongIds.value = newSet
+  }
+}
+
+const allVisibleSelected = computed(() => {
+  const visible = filteredUnscheduledSongs.value
+  if (visible.length === 0) return false
+  return visible.every(s => selectedSongIds.value.has(s.id))
+})
+
+const batchMarkSelectedPlayed = async () => {
+  const ids = Array.from(selectedSongIds.value)
+  if (ids.length === 0) return
+
+  confirmDialogTitle.value = '批量标记已播放'
+  confirmDialogMessage.value = `确定要将选中的 ${ids.length} 首歌曲标记为已播放吗？`
+  confirmDialogType.value = 'info'
+  confirmDialogConfirmText.value = '确认标记'
+
+  confirmAction.value = async () => {
+    loading.value = true
+    try {
+      await $fetch('/api/admin/songs/mark-played', {
+        method: 'POST',
+        body: { songIds: ids },
+        ...auth.getAuthConfig()
+      })
+
+      if (window.$showNotification) {
+        window.$showNotification(`${ids.length} 首歌曲已标记为播放`, 'success')
+      }
+
+      selectedSongIds.value = new Set()
+      await loadData()
+    } catch (err) {
+      console.error('批量标记播放失败:', err)
+      if (window.$showNotification) {
+        window.$showNotification('操作失败', 'error')
+      }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  showConfirmDialog.value = true
 }
 
 // 标记全部已播放
